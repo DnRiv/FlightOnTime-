@@ -41,11 +41,19 @@ def build_preprocessor():
     categorical_cols = ["UniqueCarrier", "Origin", "Dest", "DayOfWeek"]
     numerical_cols = ["dep_hour", "Distance"]
 
-    preprocessor = ColumnTransformer(
+    return ColumnTransformer(
         transformers=[
             ("cat", OneHotEncoder(handle_unknown="ignore"), categorical_cols),
             ("num", "passthrough", numerical_cols),
         ]
     )
 
-    return preprocessor
+#Pipeline completo
+def build_dataset(df: pd.DataFrame):
+
+    df = clean_data(df)
+    y = create_target(df)
+    X = prepare_features(df)
+    preprocessor = build_preprocessor()
+
+    return X, y, preprocessor

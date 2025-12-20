@@ -1,50 +1,44 @@
 import pandas as pd
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import StandardScaler
 
-
-
-#Limpieza
+# Limpieza
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
     df = df[df["Cancelled"] == 0]
     df = df.dropna(subset=["ArrDelay"])
     return df
 
-
-
-#Target
+# Target
 def create_target(df: pd.DataFrame, delay_threshold: int = 15) -> pd.DataFrame:
     df = df.copy()
-    df["is_delayed"] = (df["ArrDelay"] > delay_threshold).astype(int)
+    df["Is_delayed"] = (df["ArrDelay"] > delay_threshold).astype(int)
     return df
 
-
-
-#Features
+# Features
 def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    df["dep_hour"] = df["CRSDepTime"] // 100
+    # Convert DepTime a hora
+    df["Dep_hour"] = df["CRSDepTime"] // 100
 
     features = [
-        "UniqueCarrier",
+        "Unique_carrier",
         "Origin",
-        "Dest",
-        "DayOfWeek",
-        "dep_hour",
-        "Distance",
+        "Destination",
+        "Day_of_week",
+        "Dep_hour",
+        "Distance_miles",
     ]
 
     return df[features]
 
-#Preprocessor
+# Preprocessor
 def build_preprocessor():
-    categorical_cols = ["UniqueCarrier", "Origin", "Dest", "DayOfWeek"]
-    numerical_cols = ["dep_hour", "Distance"]
+    categorical_cols = ["Unique_carrier", "Origin", "Destination", "Day_of_week"]
+    numerical_cols = ["Dep_hour", "Distance_miles"]
 
     preprocessor = ColumnTransformer(
         transformers=[
@@ -55,13 +49,12 @@ def build_preprocessor():
 
     return preprocessor
 
-
-#Dataset final
+# Dataset final
 def build_dataset(df: pd.DataFrame):
     df = clean_data(df)
     df = create_target(df)
 
     X = prepare_features(df)
-    y = df["is_delayed"]
+    y = df["Is_delayed"]
 
     return X, y, build_preprocessor()

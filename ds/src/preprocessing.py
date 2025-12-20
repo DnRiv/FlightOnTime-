@@ -59,13 +59,16 @@ def build_preprocessor():
 def build_dataset(df: pd.DataFrame):
     df = df.copy()
 
-    #Limpiar target
+    #Limpiar
     df = df.dropna(subset=["ArrDelay"])
+
+    #Crear target
     df = create_target(df)
 
-    #Separar X / y
+    #Separar target
     y = df["is_delayed"]
 
+    #Quitar columnas
     columns_to_drop = [
         "Unnamed: 0", "is_delayed", "ArrDelay",
         "CancellationCode", "Diverted",
@@ -76,7 +79,7 @@ def build_dataset(df: pd.DataFrame):
 
     X = df.drop(columns=[c for c in columns_to_drop if c in df.columns])
 
-    #Columnas
+    #Features
     numerical_features = [
         "DepTime", "CRSDepTime", "ArrTime", "CRSArrTime",
         "ActualElapsedTime", "CRSElapsedTime",

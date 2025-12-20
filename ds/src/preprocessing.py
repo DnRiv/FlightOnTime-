@@ -57,15 +57,57 @@ def build_preprocessor():
 
 #Pipeline completo
 def build_dataset(df: pd.DataFrame):
-    df = clean_data(df)
+    df = df.copy()
 
+    #Limpiar target
     df = df.dropna(subset=["ArrDelay"])
-
     df = create_target(df)
 
-    X = prepare_features(df)
+    #Separar X / y
     y = df["is_delayed"]
 
-    preprocessor = build_preprocessor()
+    columns_to_drop = [
+        "Unnamed: 0", "is_delayed", "ArrDelay",
+        "CancellationCode", "Diverted",
+        "CarrierDelay", "WeatherDelay", "NASDelay",
+        "SecurityDelay", "LateAircraftDelay",
+        "TailNum", "FlightNum"
+    ]
+
+    X = df.drop(columns=[c for c in columns_to_drop if c in df.columns])
+
+    #Columnas
+    numerical_features = [
+        "DepTime", "CRSDepTime", "ArrTime", "CRSArrTime",
+        "ActualElapsedTime", "CRSElapsedTime",
+        "AirTime", "DepDelay", "Distance", "TaxiIn", "TaxiOut"
+    ]
+
+    categorical_features = [
+        "UniqueCarrier", "Origin", "Dest",
+        "DayOfWeek", "Month", "DayofMonth", "Year"
+    ]
+
+    numeric_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="mean")),
+            ("scaler", StandardScaler())
+        ]
+    )
+
+    categorical_transformer = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore"))
+        ]
+    )
+
+    preprocessor = ColumnTransformer(
+        transformers=[
+            ("num", numeric_transformer, numerical_features),
+            ("cat", categorical_transformer, categorical_features),
+        ],
+        remainder="drop"
+    )
 
     return X, y, preprocessor

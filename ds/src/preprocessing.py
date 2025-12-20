@@ -5,9 +5,24 @@ from sklearn.preprocessing import OneHotEncoder
 #funcion de limpieza
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-
     df = df.copy()
+
+    # Quitar vuelos cancelados
     df = df[df["Cancelled"] == 0]
+
+    # Eliminar nan
+    df = df.dropna(
+        subset=[
+            "ArrDelay",
+            "CRSDepTime",
+            "Distance",
+            "UniqueCarrier",
+            "Origin",
+            "Dest",
+            "DayOfWeek",
+        ]
+    )
+
     return df
 
 #Target

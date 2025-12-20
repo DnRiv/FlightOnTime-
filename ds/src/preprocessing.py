@@ -6,14 +6,21 @@ from sklearn.preprocessing import OneHotEncoder
 
 def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
-
-    # Quitar vuelos cancelados
     df = df[df["Cancelled"] == 0]
+    return df
 
-    # Eliminar nan
+
+#Target
+def create_target(
+    df: pd.DataFrame, delay_threshold: int = 15) -> pd.Series:
+    return (df["ArrDelay"] > delay_threshold).astype(int)
+
+#feature engineering final
+def prepare_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
     df = df.dropna(
         subset=[
-            "ArrDelay",
             "CRSDepTime",
             "Distance",
             "UniqueCarrier",
@@ -23,22 +30,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
         ]
     )
 
-    return df
-
-#Target
-def create_target(df: pd.DataFrame, delay_threshold: int = 15) -> pd.DataFrame:
-
-    df = df.copy()
-    df["is_delayed"] = (df["ArrDelay"] > delay_threshold).astype(int)
-    return df
-
-#feature engineering final
-def prepare_features(df: pd.DataFrame):
-
-    df = df.copy()
-
     df["dep_hour"] = df["CRSDepTime"] // 100
-    df = df.drop(columns=["CRSDepTime"])
 
     features = [
         "UniqueCarrier",
@@ -65,10 +57,23 @@ def build_preprocessor():
 
 #Pipeline completo
 def build_dataset(df: pd.DataFrame):
-
     df = clean_data(df)
+
+    # limpiar target
+    df = df.dropna(subset=["ArrDelay"])
+
     y = create_target(df)
+
     X = prepare_features(df)
+
+    # Alinear índices (MUY IMPORTANTE)
+    X = X.loc[y.index]
+    y = y.loc[X.index]
+
     preprocessor = build_preprocessor()
 
     return X, y, preprocessor
+
+X = X.loc[y.index]
+y = y.loc[X.index]
+

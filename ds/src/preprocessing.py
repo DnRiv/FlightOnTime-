@@ -59,21 +59,13 @@ def build_preprocessor():
 def build_dataset(df: pd.DataFrame):
     df = clean_data(df)
 
-    # limpiar target
     df = df.dropna(subset=["ArrDelay"])
 
-    y = create_target(df)
+    df = create_target(df)
 
     X = prepare_features(df)
-
-    # Alinear índices (MUY IMPORTANTE)
-    X = X.loc[y.index]
-    y = y.loc[X.index]
+    y = df["is_delayed"]
 
     preprocessor = build_preprocessor()
 
     return X, y, preprocessor
-
-X = X.loc[y.index]
-y = y.loc[X.index]
-

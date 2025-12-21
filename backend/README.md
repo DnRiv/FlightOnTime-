@@ -1,7 +1,7 @@
 
 #  1. Configuración actual (Spring Boot):
 
-![[Captura desde 2025-12-20 11-43-08.png]]
+<center><img src="SpringBootProject.png" /></center>
 
 | Campo             | Valor                              |
 | ----------------- | ---------------------------------- |
@@ -80,3 +80,7 @@ El cual crea la BD en el servidor para ir creando la oportunidad de realizar con
 # 5. Se creo el repositorio VueloRepository.java
 
 La interfaz que actúa como una capa de abstracción para interactuar directamente con la base de datos, permitiendo operaciones CRUD (Crear, Leer, Actualizar, Eliminar) sin escribir SQL, gracias a Spring Data JPA, que genera la implementación automáticamente al extender interfaces como JpaRepository o `CrudRepository`, simplificando enormemente el acceso y manejo de datos en tu aplicación. En otras palabras crea la tablas que nos van ayudar a guardar las solicitudes realizadas por el cliente y los resultados de dichas solicitudes coma para realizar estadísticas y evaluaciones posteriormente.
+
+# 6. Se crea el archivo VueloRequest.java para validar datos
+
+Los archivos DTO (Data Transfer Object) en Java sirven para **transferir datos entre capas de una aplicación** (como frontend y backend, o controlador y servicio) de forma eficiente y segura, actuando como intermediarios planos para **minimizar llamadas de red**, **simplificar la estructura de datos** expuesta y **evitar exponer detalles internos** de la base de datos o la lógica de negocio, encapsulando solo la información necesaria y formateada para una operación específica, ya sea para recibir datos de entrada (request) o devolver resultados (response).

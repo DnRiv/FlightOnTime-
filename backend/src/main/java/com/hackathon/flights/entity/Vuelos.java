@@ -64,10 +64,13 @@ public class Vuelos {
 
     public LocalDateTime getFechaConsulta() { return fechaConsulta; }
     /* Ya no es necesario porque esta inicializada con LocalDateTime.now()
-    public void setFechaConsulta(LocalDateTime fechaConsulta) {
-           this.fechaConsulta = fechaConsulta;
-    }
+        public void setFechaConsulta(LocalDateTime fechaConsulta) {
+               this.fechaConsulta = fechaConsulta;
+        }
     */
+
+    public Integer getDistancia() { return distancia; }
+    public void setDistancia(Integer distancia) { this.distancia = distancia; }
 
     public String getPrevision() { return prevision; }
     public void setPrevision(String prevision) { this.prevision = prevision; }

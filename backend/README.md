@@ -56,23 +56,6 @@ En el proyecto ir a:  `src/main/resources/`
 
 Crear si no existe `application.properties`.
 
-```java
-# Nombre de la app
-spring.application.name=FlightOnTime
-
-# Conexión a MySQL
-spring.datasource.url=jdbc:mysql://localhost:3306/qwen?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-spring.datasource.username=cecz_777
-spring.datasource.password=TimPam1993
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
-
-# JPA / Hibernate
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-spring.jpa.properties.hibernate.format_sql=true
-spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
-```
-
 # 4. Crear nuestro archivo @Entity Vuelos.java
 
 El cual crea la BD en el servidor para ir creando la oportunidad de realizar consultas y estadísticas.

@@ -8,7 +8,10 @@ import java.time.LocalDateTime;
 public class VuelosRequest {
 
     @NotBlank(message = "aerolínea es obligatorio")
-    @Pattern(regexp = "[A-Z]{2}", message = "Aerolinea debe ser codigo IATA de 2 letras (ej: AF)")
+    @Pattern(
+            regexp = "([A-Z]{2}|[A-Z][0-9]|[0-9][A-Z])",
+            message = "aerolinea debe ser código IATA de 2 caracteres (ej: LA, 9E, B6)"
+    )
     // @Size(min = 2, max = 2, message = "El texto debe tener dos caracteres")
     // Un forma diferente de realizar la validación
     private String aerolinea;

@@ -67,3 +67,12 @@ La interfaz que actúa como una capa de abstracción para interactuar directamen
 # 6. Se crea el archivo VueloRequest.java para validar datos
 
 Los archivos DTO (Data Transfer Object) en Java sirven para **transferir datos entre capas de una aplicación** (como frontend y backend, o controlador y servicio) de forma eficiente y segura, actuando como intermediarios planos para **minimizar llamadas de red**, **simplificar la estructura de datos** expuesta y **evitar exponer detalles internos** de la base de datos o la lógica de negocio, encapsulando solo la información necesaria y formateada para una operación específica, ya sea para recibir datos de entrada (request) o devolver resultados (response).
+
+# 7. Se agrega el archivo ValidationException
+
+Para manejar errores específicos de tu aplicación de forma más clara y controlada.
+
+
+# 8. Se crea el archivo FlightsService
+
+En este archivo validamos los datos de Aerolínea, Origen, Destino y Rutas existentes. El dataset proporcionado por DS, fue trabajado a través de python y pandas en un entorno virtual para generar dichos archivos.

@@ -1,10 +1,13 @@
 package com.hackathon.flights.service;
 
+import com.hackathon.flights.entity.Vuelos;
 import com.hackathon.flights.exception.ValidationException;
 import com.hackathon.flights.repository.VuelosRepository;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import com.hackathon.flights.dto.PrediccionResponse;
+import com.hackathon.flights.dto.VuelosRequest;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -24,8 +27,6 @@ public class FlightsService {
     public FlightsService(VuelosRepository vuelosRepository) {
         this.vuelosRepository = vuelosRepository;
     }
-
-
 
     private Set<String> cargarSetDesdeCsv(String nombreArchivo) {
         Set<String> datos = new HashSet<>();
@@ -63,9 +64,18 @@ public class FlightsService {
         aerolineasValidas = cargarSetDesdeCsv("aerolineas.csv");
         aeropuertosValidos = cargarSetDesdeCsv("destino_valido.csv"); // origen y destino usan el mismo csv
         rutasValidas = cargarSetDesdeCsv("rutas_validas.csv"); // con separador
+        /* Para verificar que están cargando los archivos csv
+        System.out.println("Aerolíneas cargadas: " + aerolineasValidas.size());
+        System.out.println("Rutas cargadas: " + rutasValidas.size());
+        System.out.println("Primera ruta: " + rutasValidas.iterator().next());
+        */
     }
 
     private void validarRuta(String aerolinea, String origen, String destino) {
+        /* Log para ver que valida
+        System.out.println("Validando ruta: " + aerolinea + "|" + origen + "|" + destino);
+        System.out.println("Rutas cargadas: " + rutasValidas.size());
+         */
         if (!aerolineasValidas.contains(aerolinea)) {
             throw new ValidationException("aerolinea '" + aerolinea + "' no soportada. "
                     + "Ejemplos: " + aerolineasValidas.stream().limit(3).toList());
@@ -82,5 +92,46 @@ public class FlightsService {
         if (!rutasValidas.contains(aerolinea + "|" + origen + "|" + destino)) {
             throw new ValidationException("Ruta no soportada: " + aerolinea + " " + origen + " → " + destino);
         }
+    }
+
+    public PrediccionResponse predecir(VuelosRequest request) {
+        /* Para saber que se recibe el request
+        System.out.println("Recibido request: " + request.getAerolinea());
+        */
+        // 1. Validar ruta
+        validarRuta(request.getAerolinea(), request.getOrigen(), request.getDestino());
+
+        // 2. Convertir a entidad
+        Vuelos vuelo = new Vuelos(
+                request.getAerolinea(),
+                request.getOrigen(),
+                request.getDestino(),
+                request.getFechaPartida(),
+                request.getDistancia()
+        );
+
+        // 3. Llamar a DS (mock por ahora)
+        PrediccionResponse prediccion = mockLlamadaDS(request);
+
+        // 4. Completar entidad y guardar
+        vuelo.setPrevision(prediccion.getPrevision());
+        vuelo.setProbabilidad(prediccion.getProbabilidad());
+        vuelosRepository.save(vuelo);
+
+        return prediccion;
+    }
+
+    private PrediccionResponse mockLlamadaDS(VuelosRequest request) {
+        // Simula una predicción realista
+        double probabilidad;
+        if (request.getOrigen().equals("SCL") && request.getDestino().equals("LIM")) {
+            probabilidad = 0.35; // Ruta puntual
+        } else if (request.getFechaPartida().getHour() >= 22) {
+            probabilidad = 0.80; // Vuelos nocturnos → más retrasos
+        } else {
+            probabilidad = Math.random(); // Aleatorio
+        }
+        String prevision = probabilidad > 0.5 ? "Retrasado" : "Puntual";
+        return new PrediccionResponse(prevision, probabilidad);
     }
 }

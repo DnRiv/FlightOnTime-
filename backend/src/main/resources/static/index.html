@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>FlightOnTime — Predicción de Retrasos</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .card { background: #f8f9fa; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a5276; text-align: center; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; margin-top: 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { background: #218838; }
+        #resultado { margin-top: 20px; padding: 15px; border-radius: 6px; background: #e8f5e9; font-family: monospace; white-space: pre-wrap; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>✈️ FlightOnTime</h1>
+    <p>Ingresa los datos del vuelo para predecir si será <strong>puntual</strong> o <strong>retrasado</strong>.</p>
+    <form id="formulario">
+        <label>Aerolínea (código IATA, ej: DL)</label>
+        <input id="aerolinea">
+
+        <label>Origen (código IATA, ej: LGA)</label>
+        <input id="origen">
+
+        <label>Destino (código IATA, ej: TPA)</label>
+        <input id="destino">
+
+        <label>Fecha y hora de partida</label>
+        <input id="fechaPartida" type="datetime-local" value="2025-12-20T08:30">
+
+        <label>Distancia</label>
+        <input id="distancia" type="number">
+
+        <button type="submit">🔍 Predecir</button>
+    </form>
+
+    <div id="resultado" style="display:none;"></div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

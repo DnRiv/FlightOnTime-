@@ -3,7 +3,7 @@ package com.hackathon.flights.dto;
 public class PrediccionResponse {
 
     private final String prevision;
-    private final double probabilidad;  // o float, según DS
+    private final double probabilidad; // double más precision y es el estandar
 
     public PrediccionResponse(String prevision, double probabilidad) {
         this.prevision = prevision;

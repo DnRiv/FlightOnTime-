@@ -31,7 +31,7 @@ public class VuelosRequest {
 
     @NotNull(message = "La Distancia es obligatoria")
     @Min(value = 0, message = "distancia debe ser mayor a 0")
-    @JsonProperty("distancia_km") // En el desafío se entrega así
+    // @JsonProperty("distancia_km") // En el desafío se entrega así
     private Integer distancia; // Dataset usa datos enteros
 
     // Constructor vacío

@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', function() {
             aerolinea: aerolinea,
             origen: origen,
             destino: destino,
-            fecha_partida: fechaPartida ? new Date(fechaPartida).toISOString() : null,
+            fecha_partida: fechaPartida,
             distancia: distancia
         };
 

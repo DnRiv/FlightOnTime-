@@ -19,7 +19,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
+        body.put("error", "Solicitud Incorrecta");
         body.put("message", ex.getMessage());  // ← ¡aquí está el mensaje que falta!
         body.put("errorCode", ex.getErrorCode());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
+        body.put("error", "Solicitud Incorrecta");
         body.put("message", mensaje);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
+        body.put("error", "Solicitud Incorrecta");
         body.put("message", "JSON inválido o datos mal formateados: " + ex.getMessage());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
@@ -55,7 +55,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("error", "Bad Request");
+        body.put("error", "Solicitud Incorrecta");
         body.put("message", mensaje);
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }

@@ -1,0 +1,1001 @@
+./src/test/java/com/hackathon/flights/service/FlightsServiceTest.java
+package com.hackathon.flights.service;
+
+import com.hackathon.flights.dto.PrediccionResponse;
+import com.hackathon.flights.dto.VuelosRequest;
+import com.hackathon.flights.entity.Vuelos;
+import com.hackathon.flights.exception.ValidationException;
+import com.hackathon.flights.repository.VuelosRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.client.RestTemplate;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+// 1. @ExtendWith: Le dice a JUnit que use Mockito para inicializar los @Mock
+@ExtendWith(MockitoExtension.class)
+class FlightsServiceTest {
+
+    // 2. @Mock: Crea objetos "falsos" de las dependencias
+    @Mock
+    private VuelosRepository vuelosRepository;
+
+    @Mock
+    private RestTemplate restTemplate;
+
+    // 3. @InjectMocks: Crea el servicio real e inyecta los Mocks anteriores dentro de él
+    @InjectMocks
+    private FlightsService flightsService;
+
+    @BeforeEach
+    void setUp() {
+        // TRUCO IMPORTANTE:
+        // Como FlightsService carga datos de CSV en @PostConstruct, y aquí no queremos
+        // leer archivos reales (eso sería un test de integración), inyectamos manualmente
+        // los Sets de validación usando ReflectionTestUtils.
+
+        Set<String> aerolineas = new HashSet<>(Set.of("AA", "DL", "9C"));
+        Set<String> aeropuertos = new HashSet<>(Set.of("MIA", "JFK", "TIP"));
+        Set<String> rutas = new HashSet<>(Set.of("AA|MIA|JFK", "9C|JFK|TTP"));
+
+        // ✅ Cargar mapaZonas para tests
+        Map<String, String> mapaZonas = Map.of(
+                "JFK", "America/New_York",
+                "LAX", "America/Los_Angeles",
+                "DEN", "America/Denver",
+                "PHX", "America/Phoenix",
+                "ORD", "America/Chicago",
+                "DFW", "America/Chicago",
+                "ATL", "America/New_York",
+                "TTP", "America/Los_Angeles",
+                "MIA", "America/New_York",
+                "TIP", "America/Denver"
+                // Añade más si tus tests los usan
+        );
+
+        // Inyectamos estos datos "falsos" en las variables privadas del servicio
+        ReflectionTestUtils.setField(flightsService, "aerolineasValidas", aerolineas);
+        ReflectionTestUtils.setField(flightsService, "aeropuertosValidos", aeropuertos);
+        ReflectionTestUtils.setField(flightsService, "rutasValidas", rutas);
+        ReflectionTestUtils.setField(flightsService, "mapaZonas", mapaZonas);
+
+    }
+
+    @Test
+    void predecir_DeberiaRetornarPuntual_CuandoApiRespondeOnSchedule() {
+        // --- A. ARRANGE (Preparar datos) ---
+
+        // 1. Crear el Request de entrada (Datos válidos según nuestro setUp)
+        VuelosRequest request = new VuelosRequest();
+        request.setAerolinea("AA");
+        request.setOrigen("MIA");
+        request.setDestino("JFK");
+        // Importante para que el Test funcione debe ser una fecha futura
+        // request.setFechaPartida(LocalDateTime.of(2026, 12, 30, 10, 0));
+        request.setFechaPartida(LocalDateTime.now().plusDays(1));
+        request.setDistancia(1000);
+
+        // 2. Simular la respuesta que daría Python (JSON simulado)
+        Map<String, Object> respuestaPython = new HashMap<>();
+        respuestaPython.put("prediction", "on schedule"); // Python dice "on schedule"
+        respuestaPython.put("probability", 0.95);
+
+        // Envolvemos eso en un ResponseEntity, que es lo que devuelve RestTemplate
+        ResponseEntity<Map<String, Object>> responseEntity =
+                new ResponseEntity<>(respuestaPython, HttpStatus.OK);
+
+        // 3. ENSEÑAR AL MOCK (Stubbing):
+        // "Cuando llames a exchange(...) con cualquier parámetro, devuelve 'responseEntity'"
+        when(restTemplate.exchange(
+                eq("http://localhost:8000/predict"), // URL exacta
+                eq(HttpMethod.POST),                // Método exacto
+                any(HttpEntity.class),              // Cualquier cuerpo (para no complicar el test)
+                any(ParameterizedTypeReference.class) // Cualquier tipo de respuesta esperado
+        )).thenReturn(responseEntity);
+
+        // --- B. ACT (Ejecutar la lógica) ---
+        PrediccionResponse resultado = flightsService.predecir(request);
+
+        // --- C. ASSERT (Verificar resultados) ---
+
+        // Verificamos que nuestro Java tradujo "on schedule" a "Puntual" [cite: 93]
+        assertEquals("Puntual", resultado.getPrevision());
+        assertEquals(0.95, resultado.getProbabilidad());
+
+        // Verificamos que el servicio intentó guardar en la base de datos [cite: 81]
+        verify(vuelosRepository).save(any(Vuelos.class));
+    }
+
+    @Test
+    void predecir_DeberiaLanzarExcepcion_CuandoRutaEsInvalida() {
+        // Arrange: datos completos, pero con aerolínea NO válida
+        VuelosRequest request = new VuelosRequest();
+        request.setAerolinea("XX"); // Importante: aerolínea NO debe estar en los datos de prueba
+        request.setOrigen("MIA");
+        request.setDestino("JFK");
+        request.setFechaPartida(LocalDateTime.now().plusHours(2));
+        request.setDistancia(1500);
+
+        // Act & Assert
+        ValidationException exception = assertThrows(
+                ValidationException.class,
+                () -> flightsService.predecir(request)
+        );
+
+        // Assert: mensaje debe incluir "XX", no "AA"
+        assertTrue(exception.getMessage().contains("aerolinea 'XX' no soportada"));
+        // ✅ No se llama a DS → no hay error de response null
+    }
+
+
+}
+
+
+./src/test/java/com/hackathon/flights/FlightsApplicationTests.java
+package com.hackathon.flights;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class FlightsApplicationTests {
+
+	@Test
+	void contextLoads() {
+	}
+
+}
+
+
+./src/main/java/com/hackathon/flights/entity/Vuelos.java
+package com.hackathon.flights.entity;
+
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "vuelos")
+public class Vuelos {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, length = 2)
+    private String aerolinea;
+
+    @Column(nullable = false, length = 3)
+    private String origen;
+
+    @Column(nullable = false, length = 3)
+    private String destino;
+
+    @Column(name = "fecha_partida")
+    private LocalDateTime fechaPartida;
+
+    @Column(name = "distancia")
+    private Integer distancia;
+
+    @Column(name = "fecha_consulta", updatable = false)
+    private LocalDateTime fechaConsulta = LocalDateTime.now();
+
+    @Column(name = "prevision", length = 20 )
+    private String prevision;
+
+    @Column(name = "probabilidad")
+    private double probabilidad;
+
+    // Constructores
+    public Vuelos() {}
+
+    public Vuelos(String aerolinea, String origen, String destino,
+                 LocalDateTime fechaPartida, Integer distancia) {
+        this.aerolinea = aerolinea;
+        this.origen = origen;
+        this.destino = destino;
+        this.fechaPartida = fechaPartida;
+        this.distancia = distancia;
+    }
+
+    // Getters y Setters
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public String getAerolinea() { return aerolinea; }
+    public void setAerolinea(String aerolinea) { this.aerolinea = aerolinea; }
+
+    public String getOrigen() { return origen; }
+    public void setOrigen(String origen) { this.origen = origen; }
+
+    public String getDestino() { return destino; }
+    public void setDestino(String destino) { this.destino = destino; }
+
+    public LocalDateTime getFechaPartida() { return fechaPartida; }
+    public void setFechaPartida(LocalDateTime fechaPartida) { this.fechaPartida = fechaPartida; }
+
+    public LocalDateTime getFechaConsulta() { return fechaConsulta; }
+    /* Ya no es necesario porque esta inicializada con LocalDateTime.now()
+        public void setFechaConsulta(LocalDateTime fechaConsulta) {
+               this.fechaConsulta = fechaConsulta;
+        }
+    */
+
+    public Integer getDistancia() { return distancia; }
+    public void setDistancia(Integer distancia) { this.distancia = distancia; }
+
+    public String getPrevision() { return prevision; }
+    public void setPrevision(String prevision) { this.prevision = prevision; }
+
+    public double getProbabilidad() { return probabilidad; }
+    public void setProbabilidad(double probabilidad) { this.probabilidad = probabilidad; }
+
+}
+
+./src/main/java/com/hackathon/flights/FlightsApplication.java
+package com.hackathon.flights;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class FlightsApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(FlightsApplication.class, args);
+	}
+
+}
+
+./src/main/java/com/hackathon/flights/exception/ValidationException.java
+package com.hackathon.flights.exception;
+
+public class ValidationException extends RuntimeException {
+
+    private final String errorCode;
+
+    public ValidationException(String mensaje, String errorCode, Throwable causa) {
+        super(mensaje, causa);
+        this.errorCode = errorCode;
+    }
+
+    public ValidationException(String mensaje, String errorCode) {
+        this(mensaje, errorCode, null);
+    }
+
+    public ValidationException(String mensaje) {
+        this(mensaje, "VALIDACION_FALLIDA", null);
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+}
+
+
+./src/main/java/com/hackathon/flights/exception/GlobalExceptionHandler.java
+package com.hackathon.flights.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.support.WebExchangeBindException;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationException(ValidationException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Solicitud Incorrecta");
+        body.put("message", ex.getMessage());  // ← ¡aquí está el mensaje que falta!
+        body.put("errorCode", ex.getErrorCode());
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    // Manejar errores de validación de Spring (@Valid)
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        String mensaje = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Solicitud Incorrecta");
+        body.put("message", mensaje);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(
+            org.springframework.http.converter.HttpMessageNotReadableException ex) {
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Solicitud Incorrecta");
+        body.put("message", "JSON inválido o datos mal formateados: " + ex.getMessage());
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+    // Usamos WebExchangeBindException porque en el pom.xml usamos spring-boot-starter-webflux
+    @ExceptionHandler(WebExchangeBindException.class)
+    public ResponseEntity<Map<String, Object>> handleWebExchangeBindException(WebExchangeBindException ex) {
+        String mensaje = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        Map<String, Object> body = new HashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Solicitud Incorrecta");
+        body.put("message", mensaje);
+        return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
+    }
+}
+
+
+./src/main/java/com/hackathon/flights/service/FlightsService.java
+package com.hackathon.flights.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hackathon.flights.dto.DsRequest;
+import com.hackathon.flights.entity.Vuelos;
+import com.hackathon.flights.exception.ValidationException;
+import com.hackathon.flights.repository.VuelosRepository;
+import jakarta.annotation.PostConstruct;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import com.hackathon.flights.dto.PrediccionResponse;
+import com.hackathon.flights.dto.VuelosRequest;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+@Service
+public class FlightsService {
+
+    private Set<String> aerolineasValidas;
+    private Set<String> aeropuertosValidos;
+    private Set<String> rutasValidas;
+    private Map<String, String> mapaZonas;
+
+    private final VuelosRepository vuelosRepository;
+    private final RestTemplate restTemplate;  // ← inyectado por constructor
+
+    // Constructor con inyección de ambas dependencias
+    public FlightsService(VuelosRepository vuelosRepository, RestTemplate restTemplate) {
+        this.vuelosRepository = vuelosRepository;
+        this.restTemplate = restTemplate;
+    }
+
+    private Set<String> cargarSetDesdeCsv(String nombreArchivo) {
+        Set<String> datos = new HashSet<>();
+        try {
+            ClassPathResource resource = new ClassPathResource(nombreArchivo);
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    linea = linea.trim();
+                    if (!linea.isEmpty() && !linea.startsWith("#")) {
+                        datos.add(linea);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new ValidationException(
+                    "No se pudo cargar el archivo: " + nombreArchivo,
+                    "ARCHIVO_PERDIDO",
+                    e
+            );
+        }
+        return datos;
+    }
+
+    @PostConstruct
+    public void cargarDatosValidacion() {
+        aerolineasValidas = cargarSetDesdeCsv("aerolineas.csv"); // Llama a archivos csv
+        aeropuertosValidos = cargarSetDesdeCsv("destino_valido.csv");
+        rutasValidas = cargarSetDesdeCsv("rutas_validas.csv");
+        mapaZonas = cargarMapaDesdeCsv("aeropuertos_zonas_usa.csv");
+        /* Para verificar que están cargando los archivos csv
+        System.out.println("Aerolíneas cargadas: " + aerolineasValidas.size());
+        System.out.println("Rutas cargadas: " + rutasValidas.size());
+        System.out.println("Primera ruta: " + rutasValidas.iterator().next());
+        */
+        /* Logs para ver que cargue bien aeropuertos_zonas_usa.csv
+        System.out.println("Zonas cargadas: " + mapaZonas.size());
+        System.out.println("JFK → " + mapaZonas.get("JFK"));
+        */
+    }
+
+    private Map<String, String> cargarMapaDesdeCsv(String nombreArchivo) {
+        Map<String, String> mapa = new HashMap<>();
+        try {
+            ClassPathResource resource = new ClassPathResource(nombreArchivo);
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8))) {
+                String linea;
+                while ((linea = reader.readLine()) != null) {
+                    linea = linea.trim();
+                    // Saltar líneas vacías y comentarios
+                    if (linea.isEmpty() || linea.startsWith("#")) continue;
+
+                    // Dividir por coma (asumiendo formato: IATA,ZONA)
+                    String[] partes = linea.split(",", 2); // máximo 2 partes
+                    if (partes.length == 2) {
+                        String clave = partes[0].trim();
+                        String valor = partes[1].trim();
+                        mapa.put(clave, valor);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new ValidationException(
+                    "No se pudo cargar el archivo: " + nombreArchivo,
+                    "ARCHIVO_PERDIDO",
+                    e
+            );
+        }
+        return mapa;
+    }
+
+    private void validarRuta(String aerolinea, String origen, String destino) {
+        /* Log para ver que valida - Borrar luego de encontrar error
+        System.out.println("Validando ruta: " + aerolinea + "|" + origen + "|" + destino);
+        System.out.println("Rutas cargadas: " + rutasValidas.size());
+        */
+
+        if (!aerolineasValidas.contains(aerolinea)) {
+            throw new ValidationException("aerolinea '" + aerolinea + "' no soportada. "
+                    + "Ejemplos: " + aerolineasValidas.stream().limit(3).toList());
+        }
+        if (!aeropuertosValidos.contains(origen)) {
+            throw new ValidationException("origen '" + origen + "' no es un aeropuerto válido.");
+        }
+        if (!aeropuertosValidos.contains(destino)) {
+            throw new ValidationException("destino '" + destino + "' no es un aeropuerto válido.");
+        }
+        if (!rutasValidas.contains(aerolinea + "|" + origen + "|" + destino)) {
+            throw new ValidationException("Ruta no soportada: " + aerolinea + " " + origen + " → " + destino);
+        }
+    }
+
+    public PrediccionResponse predecir(VuelosRequest request) {
+        // Log para saber que se recibe el request
+        // System.out.println("Recibido request CCZ: " + request.getAerolinea());
+
+        // 1. Validar ruta
+        validarRuta(request.getAerolinea(), request.getOrigen(), request.getDestino());
+
+        // ✅ Nueva validación: hora futura en zona del origen
+        validarHoraFutura(request.getFechaPartida(), request.getOrigen());
+
+        // 2. Convertir a entidad
+        Vuelos vuelo = new Vuelos(
+                request.getAerolinea(),
+                request.getOrigen(),
+                request.getDestino(),
+                request.getFechaPartida(),
+                request.getDistancia()
+        );
+
+        // 3. Llamar a DS
+        PrediccionResponse prediccion = llamarModeloDS(request);
+
+        // 4. Completar entidad y guardar
+        vuelo.setPrevision(prediccion.getPrevision());
+        vuelo.setProbabilidad(prediccion.getProbabilidad());
+        vuelosRepository.save(vuelo);
+
+        return prediccion;
+    }
+
+    private void validarHoraFutura(LocalDateTime horaLocal, String origen) {
+        // 1. Obtener zona del aeropuerto de origen
+        String zonaId = obtenerZona(origen);
+
+        // 2. Interpretar la hora como local al origen
+        ZonedDateTime horaSalida = horaLocal.atZone(ZoneId.of(zonaId));
+
+        // 3. Obtener el instante actual en UTC (para comparación justa)
+        ZonedDateTime ahoraUTC = ZonedDateTime.now(ZoneOffset.UTC);
+
+        // 🔍 Diagnóstico (opcional, para desarrollo)
+        System.out.println("🔍 Validando: " +
+                horaSalida + " → UTC: " + horaSalida.toInstant() +
+                " | Ahora UTC: " + ahoraUTC.toInstant());
+
+        // 4. Comparar: ¿la hora de salida es anterior al presente en UTC?
+        if (horaSalida.isBefore(ahoraUTC)) {
+            throw new ValidationException(
+                    "La fecha de partida debe ser futura en " + origen,
+                    "FECHA_PASADA"
+            );
+        }
+    }
+
+    private String obtenerZona(String iata) {
+        // ✅ Usamos el mapa que ya cargaremos (como aerolineasValidas)
+        return mapaZonas.getOrDefault(iata, "America/New_York"); // fallback razonable para EE.UU.
+    }
+
+    // Método privado, SIN @Autowired
+    private PrediccionResponse llamarModeloDS(VuelosRequest request) {
+        
+        DsRequest dsRequest = new DsRequest(
+                request.getAerolinea(),
+                request.getOrigen(),
+                request.getDestino(),
+                request.getFechaPartida(),
+                request.getDistancia()
+        );
+
+        // Borrar esta parte luego de encontrar el error
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            String json = mapper.writeValueAsString(dsRequest);
+            System.out.println("🚀 JSON enviado a DS: " + json);
+        } catch (Exception e) {
+            System.err.println("❌ Error al serializar DsRequest: " + e.getMessage());
+        }
+
+        try {
+
+            // ✅ Usamos Map<String, Object> para mayor claridad
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    "http://localhost:8000/predict",
+                    HttpMethod.POST,
+                    new HttpEntity<>(dsRequest),
+                    new ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+
+            Map<String, Object> body = response.getBody();
+            if (body == null || !body.containsKey("prediction") || !body.containsKey("probability")) {
+                throw new ValidationException("Respuesta inválida de DS: " + body, "DS_ERROR");
+            }
+
+            String prediction = (String) body.get("prediction");
+            Object probObj = body.get("probability");
+            double probability = (probObj instanceof Number)
+                    ? ((Number) probObj).doubleValue()
+                    : Double.parseDouble(probObj.toString());
+
+            String prevision = "on schedule".equals(prediction) ? "Puntual" : "Retrasado";
+            return new PrediccionResponse(prevision, probability);
+
+        } catch (ResourceAccessException e) {
+            throw new ValidationException("DS no está disponible (¿corriendo en puerto 8000?)", "DS_OFFLINE", e);
+        } catch (HttpClientErrorException e) {
+            String errorBody = e.getResponseBodyAsString();
+            throw new ValidationException("Error en DS: " + (errorBody.isEmpty() ? e.getMessage() : errorBody), "DS_ERROR", e);
+        } catch (Exception e) {
+            throw new ValidationException("Error inesperado al llamar a DS: " + e.getMessage(), "DS_ERROR", e);
+        }
+    }
+}
+
+
+./src/main/java/com/hackathon/flights/controller/VueloController.java
+package com.hackathon.flights.controller;
+
+import com.hackathon.flights.dto.PrediccionResponse;
+import com.hackathon.flights.dto.VuelosRequest;
+import com.hackathon.flights.service.FlightsService;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+
+
+@RestController
+@RequestMapping("/predict")
+public class VueloController {
+
+    private final FlightsService flightsService;
+
+    public VueloController(FlightsService flightsService) {
+        this.flightsService = flightsService;
+    }
+
+    @PostMapping
+    public PrediccionResponse predecirVuelo(@Valid @RequestBody VuelosRequest request) {
+        return flightsService.predecir(request);
+    }
+}
+
+
+./src/main/java/com/hackathon/flights/config/RestTemplateConfig.java
+package com.hackathon.flights.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
+
+@Configuration
+public class RestTemplateConfig {
+    @Bean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+}
+
+
+./src/main/java/com/hackathon/flights/repository/VuelosRepository.java
+package com.hackathon.flights.repository;
+
+import com.hackathon.flights.entity.Vuelos;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface VuelosRepository extends JpaRepository<Vuelos, Long> {
+    // JpaRepository ya provee: save(), findById(), findAll(), delete(), etc.
+}
+
+
+./src/main/java/com/hackathon/flights/dto/PrediccionResponse.java
+package com.hackathon.flights.dto;
+
+public class PrediccionResponse {
+
+    private final String prevision;
+    private final double probabilidad; // double más precision y es el estandar
+
+    public PrediccionResponse(String prevision, double probabilidad) {
+        this.prevision = prevision;
+        this.probabilidad = probabilidad;
+    }
+
+    public String getPrevision() { return prevision; }
+    public double getProbabilidad() { return probabilidad; }
+}
+
+
+./src/main/java/com/hackathon/flights/dto/VuelosRequest.java
+package com.hackathon.flights.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.validation.constraints.*;
+
+import java.time.LocalDateTime;
+
+public class VuelosRequest {
+
+    @NotBlank(message = "aerolínea es obligatorio")
+    @Pattern(
+            regexp = "([A-Z]{2}|[A-Z][0-9]|[0-9][A-Z])",
+            message = "aerolinea debe ser código IATA de 2 caracteres (ej: LA, 9E, B6)"
+    )
+    // @Size(min = 2, max = 2, message = "El texto debe tener dos caracteres")
+    // Un forma diferente de realizar la validación
+    private String aerolinea;
+
+    @NotBlank(message = "origen es obligatorio")
+    @Pattern(regexp = "[A-Z]{3}", message = "Origen debe ser codigo IATA de 3 letras (ej: SCL)")
+    private String origen;
+
+    @NotBlank(message = "destino es obligatorio")
+    @Pattern(regexp = "[A-Z]{3}", message = "Destino debe ser codigo IATA de 3 letras (ej: LIM)")
+    private String destino;
+
+    @NotNull(message = "La fecha de salida es obligatoria")
+    // @FutureOrPresent(message = "La fecha debe ser actual o posterior")
+    // Hay un problema de horario entre el ingreso y la hora local
+    @JsonProperty("fecha_partida")
+    private LocalDateTime fechaPartida;
+
+    @NotNull(message = "La Distancia es obligatoria")
+    @Min(value = 1, message = "distancia debe ser mayor a 0")
+    // @JsonProperty("distancia_km") // En el desafío se entrega así
+    private Integer distancia; // Dataset usa datos enteros
+
+    // Constructor vacío
+    public VuelosRequest() {}
+
+    // Getter y Setter
+    public String getAerolinea() { return aerolinea; }
+    public void setAerolinea(String aerolinea) {
+        this.aerolinea = aerolinea != null ? aerolinea.trim().toUpperCase() : null;
+    }
+
+    public String getOrigen() { return origen; }
+    public void setOrigen(String origen) {
+        this.origen = origen != null ? origen.trim().toUpperCase() : null;
+    }
+
+    public String getDestino() { return destino; }
+    public void setDestino(String destino) {
+        this.destino = destino != null ? destino.trim().toUpperCase() : null;
+    }
+
+    public LocalDateTime getFechaPartida() { return fechaPartida; }
+    public void setFechaPartida(LocalDateTime fechaPartida) { this.fechaPartida = fechaPartida; }
+
+    public Integer getDistancia() { return distancia; }
+    public void setDistancia(Integer distancia) { this.distancia = distancia; }
+
+}
+
+
+./src/main/java/com/hackathon/flights/dto/DsRequest.java
+package com.hackathon.flights.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.time.LocalDateTime;
+
+public class DsRequest {
+    @JsonProperty("airline")
+    private String airline;
+
+    @JsonProperty("origin")
+    private String origin;
+
+    @JsonProperty("destination")
+    private String destination;
+
+    @JsonProperty("departure_time")
+    private String departure_time;
+
+    @JsonProperty("distance_miles")
+    private Integer distance_miles;
+
+    // constructor, getters
+    public DsRequest(String airline, String origin, String destination,
+                     LocalDateTime departureTime, Integer distancia) {
+        this.airline = airline;
+        this.origin = origin;
+        this.destination = destination;
+        this.departure_time = departureTime.toString(); // DS espera ISO sin zona
+        this.distance_miles = distancia;
+    }
+
+    public String getAirline() { return airline; }
+    public String getOrigin() { return origin; }
+    public String getDestination() { return destination; }
+    public String getDeparture_time() { return departure_time; }
+    public Integer getDistance_miles() { return distance_miles; }
+}
+
+
+./src/main/resources/static/js/app.js
+// ✅ Espera a que el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    console.log("✅ app.js cargado y ejecutándose"); // Borrar luego
+    const formulario = document.getElementById('formulario');
+    if (!formulario) {
+        console.error("❌ Formulario no encontrado");
+        return;
+    }
+
+    formulario.addEventListener('submit', function(event) {
+        event.preventDefault(); // ← ¡esto evita la recarga!
+
+        // 1. Obtener valores
+        const aerolinea = document.getElementById('aerolinea').value.trim().toUpperCase();
+        const origen = document.getElementById('origen').value.trim().toUpperCase();
+        const destino = document.getElementById('destino').value.trim().toUpperCase();
+        const fechaPartida = document.getElementById('fechaPartida').value;
+        const distancia = parseInt(document.getElementById('distancia').value) || 0;
+
+        // 2. Validación inmediata (frontend)
+        if (!aerolinea || !origen || !destino || !fechaPartida || !distancia) {
+            alert("⚠️ Todos los campos son obligatorios");
+            return;
+        }
+        if (aerolinea.length !== 2) {
+            alert("⚠️ Aerolínea debe tener 2 caracteres");
+            return;
+        }
+        if (origen.length !== 3 || destino.length !== 3) {
+            alert("⚠️ Origen y destino deben tener 3 letras");
+            return;
+        }
+
+        // 3. Preparar datos
+        const datos = {
+            aerolinea: aerolinea,
+            origen: origen,
+            destino: destino,
+            // fecha_partida: fechaPartida ? new Date(fechaPartida).toISOString() : null,
+            fecha_partida: fechaPartida,
+            distancia: distancia
+        };
+
+        console.log("✅ Enviando:", datos);
+
+        // 4. Petición
+        const btn = event.submitter || formulario.querySelector('button[type="submit"]');
+        const resultadoDiv = document.getElementById('resultado');
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Prediciendo...";
+        resultadoDiv.style.display = "block";
+        resultadoDiv.innerHTML = "<p>Enviando solicitud...</p>";
+
+        fetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datos) // Enviando datos
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, data })))
+        .then(({ ok, data }) => {
+            if (!ok) {
+                throw new Error(data.message || 'Error en el servidor');
+            }
+            resultadoDiv.innerHTML = `
+                <h3>✅ Predicción</h3>
+                <p><strong>Estado:</strong> <span style="color:${data.prevision === 'Puntual' ? 'green' : 'red'}">
+                    ${data.prevision === 'Puntual' ? '🟢 Puntual' : '🔴 Retrasado'}
+                </span></p>
+                <p><strong>Probabilidad:</strong> ${(data.probabilidad * 100).toFixed(1)}%</p>
+            `;
+        })
+        .catch(err => {
+            resultadoDiv.innerHTML = `<p style="color:red; font-weight:bold;">⚠️ ${err.message}</p>`;
+            console.error("Error:", err);
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.textContent = "🔍 Predecir";
+        });
+    });
+});
+
+
+./src/main/resources/static/index.html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>FlightOnTime — Predicción de Retrasos</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .card { background: #f8f9fa; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a5276; text-align: center; }
+        label { display: block; margin-top: 12px; font-weight: 600; }
+        input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ddd; border-radius: 4px; }
+        button { background: #28a745; color: white; border: none; padding: 10px 20px; margin-top: 20px; border-radius: 4px; cursor: pointer; width: 100%; }
+        button:hover { background: #218838; }
+        #resultado { margin-top: 20px; padding: 15px; border-radius: 6px; background: #e8f5e9; font-family: monospace; white-space: pre-wrap; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>✈️ FlightOnTime</h1>
+    <p>Ingresa los datos del vuelo para predecir si será <strong>puntual</strong> o <strong>retrasado</strong>.</p>
+    <form id="formulario">
+        <label>Aerolínea (código IATA, ej: DL)</label>
+        <input id="aerolinea">
+
+        <label>Origen (código IATA, ej: LGA)</label>
+        <input id="origen">
+
+        <label>Destino (código IATA, ej: TPA)</label>
+        <input id="destino">
+
+        <label>Fecha y hora de partida</label>
+        <input id="fechaPartida" type="datetime-local" value="2025-12-20T08:30">
+
+        <label>Distancia</label>
+        <input id="distancia" type="number">
+
+        <button type="submit">🔍 Predecir</button>
+    </form>
+
+    <div id="resultado" style="display:none;"></div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
+
+./pom.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.3.6</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>com.hackathon</groupId>
+	<artifactId>flights</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>flights</name>
+	<description>Predicción de Retrasos de Vuelos</description>
+	<url/>
+	<licenses>
+		<license/>
+	</licenses>
+	<developers>
+		<developer/>
+	</developers>
+	<scm>
+		<connection/>
+		<developerConnection/>
+		<tag/>
+		<url/>
+	</scm>
+	<properties>
+		<java.version>17</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

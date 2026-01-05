@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>FlightOnTime — Predicción en Lote</title>
+    <link rel="icon" href="favicon.png" type="image/png">
+    <style>
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          max-width: 700px;
+          margin: 30px auto;
+          padding: 20px;
+          background-color: #f5f7fa;
+        }
+        .card {
+          background: white;
+          border-radius: 8px;
+          padding: 25px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h1 {
+          color: #1a5276;
+          text-align: center;
+          margin-top: 0;
+        }
+        .instructions {
+          background: #e3f2fd;
+          padding: 15px;
+          border-radius: 6px;
+          margin-bottom: 20px;
+          font-size: 0.95em;
+        }
+        .file-input-wrapper {
+          margin: 20px 0;
+          text-align: center;
+        }
+        #csvFile {
+          display: none;
+        }
+        .file-label {
+          display: inline-block;
+          background: #17a2b8;
+          color: white;
+          padding: 12px 24px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-weight: 600;
+        }
+        .file-label:hover {
+          background: #138496;
+        }
+        #fileName {
+          margin-top: 8px;
+          font-size: 0.9em;
+          color: #666;
+        }
+        button {
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 12px 24px;
+          margin-top: 10px;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 16px;
+          width: 100%;
+        }
+        button:disabled {
+          background: #6c757d;
+          cursor: not-allowed;
+        }
+        #resultados {
+          margin-top: 25px;
+          display: none;
+        }
+        .progress {
+          margin-top: 15px;
+          font-style: italic;
+          color: #555;
+        }
+        .summary {
+          padding: 15px;
+          border-radius: 6px;
+          margin-bottom: 15px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .warning { background: #fff3cd; color: #856404; }
+        .error { background: #f8d7da; color: #721c24; }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 15px;
+          font-size: 0.9em;
+        }
+        th, td {
+          padding: 10px;
+          text-align: left;
+          border-bottom: 1px solid #eee;
+        }
+        th {
+          background: #f1f3f5;
+        }
+        .status-ok { color: green; }
+        .status-err { color: red; }
+        .back-link {
+          display: inline-block;
+          margin-top: 15px;
+          color: #007bff;
+          text-decoration: none;
+        }
+        .back-link:hover {
+          text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="card">
+    <h1>📦 Predicción en Lote</h1>
+
+    <p class="instructions">
+        Sube un archivo CSV con múltiples vuelos para obtener predicciones masivas.<br>
+        <strong>Formato esperado:</strong>
+        <code>aerolinea,origen,destino,fecha_partida,distancia</code><br>
+        Ejemplo: <code>AA,MIA,JFK,2026-06-15T10:30,1099</code>
+    </p>
+
+    <div class="file-input-wrapper">
+        <label for="csvFile" class="file-label">📁 Seleccionar archivo CSV</label>
+        <input type="file" id="csvFile" accept=".csv">
+        <div id="fileName">Ningún archivo seleccionado</div>
+    </div>
+
+    <button id="uploadBtn" disabled>📤 Cargar y predecir</button>
+
+    <div id="resultados">
+        <div id="summary"></div>
+        <div id="details"></div>
+    </div>
+
+    <a href="index.html" class="back-link">← Volver a predicción individual</a>
+</div>
+
+<script src="js/lote.js"></script>
+</body>
+</html>

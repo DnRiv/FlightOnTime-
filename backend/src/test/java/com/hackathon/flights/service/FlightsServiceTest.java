@@ -56,10 +56,27 @@ class FlightsServiceTest {
         Set<String> aeropuertos = new HashSet<>(Set.of("MIA", "JFK", "TIP"));
         Set<String> rutas = new HashSet<>(Set.of("AA|MIA|JFK", "9C|JFK|TTP"));
 
+        // ✅ Cargar mapaZonas para tests
+        Map<String, String> mapaZonas = Map.of(
+                "JFK", "America/New_York",
+                "LAX", "America/Los_Angeles",
+                "DEN", "America/Denver",
+                "PHX", "America/Phoenix",
+                "ORD", "America/Chicago",
+                "DFW", "America/Chicago",
+                "ATL", "America/New_York",
+                "TTP", "America/Los_Angeles",
+                "MIA", "America/New_York",
+                "TIP", "America/Denver"
+                // Añade más si tus tests los usan
+        );
+
         // Inyectamos estos datos "falsos" en las variables privadas del servicio
         ReflectionTestUtils.setField(flightsService, "aerolineasValidas", aerolineas);
         ReflectionTestUtils.setField(flightsService, "aeropuertosValidos", aeropuertos);
         ReflectionTestUtils.setField(flightsService, "rutasValidas", rutas);
+        ReflectionTestUtils.setField(flightsService, "mapaZonas", mapaZonas);
+
     }
 
     @Test
@@ -71,7 +88,9 @@ class FlightsServiceTest {
         request.setAerolinea("AA");
         request.setOrigen("MIA");
         request.setDestino("JFK");
-        request.setFechaPartida(LocalDateTime.of(2025, 12, 30, 10, 0));
+        // Importante para que el Test funcione debe ser una fecha futura
+        // request.setFechaPartida(LocalDateTime.of(2026, 12, 30, 10, 0));
+        request.setFechaPartida(LocalDateTime.now().plusDays(1));
         request.setDistancia(1000);
 
         // 2. Simular la respuesta que daría Python (JSON simulado)
@@ -125,4 +144,6 @@ class FlightsServiceTest {
         assertTrue(exception.getMessage().contains("aerolinea 'XX' no soportada"));
         // ✅ No se llama a DS → no hay error de response null
     }
+
+
 }

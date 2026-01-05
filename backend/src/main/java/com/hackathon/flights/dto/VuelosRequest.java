@@ -25,7 +25,8 @@ public class VuelosRequest {
     private String destino;
 
     @NotNull(message = "La fecha de salida es obligatoria")
-    @FutureOrPresent(message = "La fecha debe ser actual o posterior")
+    // @FutureOrPresent(message = "La fecha debe ser actual o posterior")
+    // Hay un problema de horario entre el ingreso y la hora local
     @JsonProperty("fecha_partida")
     private LocalDateTime fechaPartida;
 

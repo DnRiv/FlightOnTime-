@@ -13,3 +13,4 @@ public class PrediccionResponse {
     public String getPrevision() { return prevision; }
     public double getProbabilidad() { return probabilidad; }
 }
+

@@ -1,47 +1,73 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>FlightOnTime — Predicción de Retrasos</title>
-    <link rel="icon" href="favicon.png" type="image/png">
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-        .card { background: #f8f9fa; border-radius: 8px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { color: #1a5276; text-align: center; }
-        label { display: block; margin-top: 12px; font-weight: 600; }
-        input, select { width: 100%; padding: 8px; margin-top: 4px; border: 1px solid #ddd; border-radius: 4px; }
-        button { background: #28a745; color: white; border: none; padding: 10px 20px; margin-top: 20px; border-radius: 4px; cursor: pointer; width: 100%; }
-        button:hover { background: #218838; }
-        #resultado { margin-top: 20px; padding: 15px; border-radius: 6px; background: #e8f5e9; font-family: monospace; white-space: pre-wrap; }
-        .error { background: #f8d7da; color: #721c24; }
-    </style>
+  <meta charset="UTF-8" />
+  <title>FlightOnTime — Predicción</title>
+  <link rel="icon" href="/favicon.png" type="image/png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-<div class="card">
-    <h1>✈️ FlightOnTime</h1>
-    <p>Ingresa los datos del vuelo para predecir si será <strong>puntual</strong> o <strong>retrasado</strong>.</p>
-    <form id="formulario">
-        <label>Aerolínea (código IATA, ej: DL)</label>
-        <input id="aerolinea">
+  <div class="container">
+    <div class="card" role="region" aria-labelledby="title">
+      <h1 id="title">✈️ FlightOnTime</h1>
+      <p class="subtitle">Predicción individual y por lote — Una sola interfaz, cero turbulencias.</p>
 
-        <label>Origen (código IATA, ej: LGA)</label>
-        <input id="origen">
+      <nav class="tabs" role="tablist" aria-label="Modos de predicción">
+        <button class="tab-btn" id="tab-individual" role="tab" aria-controls="panel-individual" aria-selected="true">Predicción individual</button>
+        <button class="tab-btn" id="tab-lote" role="tab" aria-controls="panel-lote" aria-selected="false">Predicción en lote</button>
+      </nav>
 
-        <label>Destino (código IATA, ej: TPA)</label>
-        <input id="destino">
+      <section id="panel-individual" class="panel active" role="tabpanel" aria-labelledby="tab-individual">
+        <div class="hint">Ingresa los datos del vuelo, para predecir si será <strong>puntual</strong> o <strong>retrasado</strong>.</div>
+        <form id="form-individual" novalidate>
+          <div class="row">
+            <div>
+              <label for="aerolinea">Aerolínea (Código IATA, ej: DL)</label>
+              <input id="aerolinea" name="aerolinea" minlength="2" maxlength="2" required />
+            </div>
+            <div>
+              <label for="distancia">Distancia (millas)</label>
+              <input id="distancia" name="distancia" type="number" min="1" step="1" required />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label for="origen">Origen (Código IATA, ej: LGA)</label>
+              <input id="origen" name="origen" minlength="3" maxlength="3" required />
+            </div>
+            <div>
+              <label for="destino">Destino (Código IATA, ej: TPA)</label>
+              <input id="destino" name="destino" minlength="3" maxlength="3" required />
+            </div>
+          </div>
+          <label for="fechaPartida">Fecha y hora de partida</label>
+          <input id="fechaPartida" name="fechaPartida" type="datetime-local" required />
+          <button class="btn" id="btn-individual" type="submit">🔍 Predecir</button>
+        </form>
+        <div id="resultado-individual" class="result" style="display:none;"></div>
+        <div id="estado-individual" class="notice" style="display:none;"></div>
+      </section>
 
-        <label>Fecha y hora de partida</label>
-        <input id="fechaPartida" type="datetime-local" value="2025-12-20T08:30">
+      <section id="panel-lote" class="panel" role="tabpanel" aria-labelledby="tab-lote">
+        <div class="hint">
+          Sube un CSV con múltiples vuelos. Formato esperado:<br />
+          <code>aerolinea,origen,destino,fecha_partida,distancia</code><br />
+          Ejemplo: <code>AA,MIA,JFK,2026-06-15T10:30,1099</code>
+        </div>
+        <div class="file-picker">
+          <label for="csvFile" class="btn-secondary file-label">📁 Seleccionar archivo CSV</label>
+          <input type="file" id="csvFile" accept=".csv" />
+          <div id="fileName">Ningún archivo seleccionado</div>
+        </div>
+        <button class="btn" id="btn-lote" disabled>📤 Cargar y predecir</button>
+        <div id="summary-lote" class="summary" style="display:none;"></div>
+        <div id="detalles-lote" style="display:none;"></div>
+        <div id="estado-lote" class="notice" style="display:none;"></div>
+      </section>
+    </div>
+  </div>
 
-        <label>Distancia</label>
-        <input id="distancia" type="number">
-
-        <button type="submit">🔍 Predecir</button>
-    </form>
-
-    <div id="resultado" style="display:none;"></div>
-</div>
-
-<script src="js/app.js"></script>
+  <script src="/js/main.js" defer></script>
 </body>
 </html>

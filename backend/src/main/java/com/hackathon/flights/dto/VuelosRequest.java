@@ -61,3 +61,4 @@ public class VuelosRequest {
     public void setDistancia(Integer distancia) { this.distancia = distancia; }
 
 }
+

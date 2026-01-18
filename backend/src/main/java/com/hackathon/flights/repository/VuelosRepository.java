@@ -8,3 +8,4 @@ import org.springframework.stereotype.Repository;
 public interface VuelosRepository extends JpaRepository<Vuelos, Long> {
     // JpaRepository ya provee: save(), findById(), findAll(), delete(), etc.
 }
+

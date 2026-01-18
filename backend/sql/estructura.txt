@@ -1,0 +1,8 @@
+.
+├── aeropuertos.sql
+├── aeropuertos_zonas.sql
+├── estructura.txt
+├── flighton_aerolineas.sql
+└── rutas_validas.sql
+
+1 directory, 5 files

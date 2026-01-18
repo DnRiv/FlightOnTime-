@@ -79,3 +79,4 @@ public class Vuelos {
     public void setProbabilidad(double probabilidad) { this.probabilidad = probabilidad; }
 
 }
+

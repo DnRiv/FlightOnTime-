@@ -36,3 +36,4 @@ public class DsRequest {
     public String getDeparture_time() { return departure_time; }
     public Integer getDistance_miles() { return distance_miles; }
 }
+

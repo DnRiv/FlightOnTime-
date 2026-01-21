@@ -4,6 +4,47 @@
    ========= */
 
 // ===== CONFIG =====
+
+// === Cargar opciones de aerolíneas y aeropuertos al iniciar ===
+document.addEventListener('DOMContentLoaded', function () {
+    const aerolineaSelect = document.getElementById('aerolinea');
+    const origenSelect = document.getElementById('origen');
+    const destinoSelect = document.getElementById('destino');
+
+    // Función para llenar un <select> con opciones
+    function llenarSelect(selectElement, valores) {
+        // Limpiar opciones existentes (excepto la primera)
+        selectElement.innerHTML = '<option value="">Seleccione...</option>';
+        valores.forEach(valor => {
+            const option = document.createElement('option');
+            option.value = valor;
+            option.textContent = valor;
+            selectElement.appendChild(option);
+        });
+    }
+
+    // Cargar aerolíneas
+    fetch('/api/aerolineas')
+        .then(response => response.json())
+        .then(data => {
+            data.sort(); // orden alfabético
+            llenarSelect(aerolineaSelect, data);
+        })
+        .catch(err => console.warn('No se pudieron cargar aerolíneas:', err));
+
+    // Cargar aeropuertos
+    fetch('/api/aeropuertos')
+        .then(response => response.json())
+        .then(data => {
+            data.sort();
+            const aeropuertos = data;
+            llenarSelect(origenSelect, aeropuertos);
+            llenarSelect(destinoSelect, aeropuertos);
+        })
+        .catch(err => console.warn('No se pudieron cargar aeropuertos:', err));
+});
+
+
 const API_BASE = window.API_BASE || window.location.origin;
 const ENDPOINT_INDIVIDUAL = `${API_BASE}/predict`;
 const ENDPOINT_LOTE       = `${API_BASE}/predict/batch`;
@@ -114,6 +155,7 @@ function setupIndividual() {
 
       const data = await res.json();
 
+      /*
       if (data && typeof data === "object" && ("prevision" in data || "probabilidad" in data)) {
         const puntual = String(data.prevision || "").toLowerCase().includes("puntual");
         out.innerHTML = `
@@ -126,6 +168,28 @@ function setupIndividual() {
       } else {
         out.textContent = pretty(data);
       }
+      */
+
+      if (data && typeof data === "object" && ("prevision" in data || "probabilidad" in data)) {
+          const puntual = String(data.prevision || "").toLowerCase().includes("puntual");
+
+          // ✅ Ajuste de probabilidad para mostrar confianza en la predicción
+          let probabilidadMostrar;
+          if (puntual) {
+              probabilidadMostrar = 1 - (data.probabilidad || 0);
+          } else {
+              probabilidadMostrar = data.probabilidad || 0;
+          }
+
+          out.innerHTML = `
+              <h3>✅ Predicción</h3>
+              <p><strong>Estado:</strong> <span style="color:${puntual ? 'green' : 'red'}">
+                  ${puntual ? '🟢 Puntual' : '🔴 Retrasado'}
+              </span></p>
+              <p><strong>Probabilidad:</strong> ${(probabilidadMostrar * 100).toFixed(1)}%</p>
+          `;
+      }
+
 
     } catch (err) {
       // 👇 También ocultamos "procesando" en errores de red o parsing
@@ -252,7 +316,13 @@ function setupBatch() {
             const statusClass = r.estado === "OK" ? "status-ok" : "status-err";
             const statusText = r.estado === "OK" ? "✅ OK" : `⚠️ ${r.estado}`;
             const resultado = r.estado === "OK"
-              ? `${r.prevision} (${(r.probabilidad * 100).toFixed(1)}%)`
+              // ? `${r.prevision} (${(r.probabilidad * 100).toFixed(1)}%)`
+              // Borrar luego de reunión con DS
+              ? (() => {
+                  const esPuntual = r.prevision.includes("Puntual");
+                  const probAjustada = esPuntual ? (1 - r.probabilidad) : r.probabilidad;
+                  return `${r.prevision} (${(probAjustada * 100).toFixed(1)}%)`;
+              })()
               : (r.mensajeError || "Error no especificado");
             const partida = r.fechaPartida ? String(r.fechaPartida).replace("T"," ") : (r.fecha_partida || "");
             return `

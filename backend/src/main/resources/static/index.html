@@ -24,7 +24,9 @@
           <div class="row">
             <div>
               <label for="aerolinea">Aerolínea (Código IATA, ej: DL)</label>
-              <input id="aerolinea" name="aerolinea" minlength="2" maxlength="2" required />
+              <select id="aerolinea" name="aerolinea" required>
+                <option value="">Seleccione una aerolínea</option>
+              </select>
             </div>
             <div>
               <label for="distancia">Distancia (millas)</label>
@@ -34,11 +36,15 @@
           <div class="row">
             <div>
               <label for="origen">Origen (Código IATA, ej: LGA)</label>
-              <input id="origen" name="origen" minlength="3" maxlength="3" required />
+              <select id="origen" name="origen" required>
+                <option value="">Seleccione un aeropuerto</option>
+              </select>
             </div>
             <div>
               <label for="destino">Destino (Código IATA, ej: TPA)</label>
-              <input id="destino" name="destino" minlength="3" maxlength="3" required />
+              <select id="destino" name="destino" required>
+                <option value="">Seleccione un aeropuerto</option>
+              </select>
             </div>
           </div>
           <label for="fechaPartida">Fecha y hora de partida</label>

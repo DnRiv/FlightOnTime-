@@ -3,15 +3,22 @@ package com.hackathon.flights.controller;
 import com.hackathon.flights.dto.PrediccionLoteResponse;
 import com.hackathon.flights.dto.PrediccionResponse;
 import com.hackathon.flights.dto.VuelosRequest;
+import com.hackathon.flights.entity.Aerolinea;
+import com.hackathon.flights.entity.Aeropuerto;
+import com.hackathon.flights.repository.AerolineaRepository;
 import com.hackathon.flights.service.FlightsService;
 import jakarta.validation.Valid;
 import jakarta.validation.ValidationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.hackathon.flights.repository.AeropuertoRepository;
+
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController

@@ -8,3 +8,4 @@ import org.springframework.stereotype.Repository;
 public interface AeropuertoRepository extends JpaRepository<Aeropuerto, Long> {
     boolean existsByCodigoIata(String codigoIata);
 }
+

@@ -6,6 +6,9 @@ import com.hackathon.flights.entity.RutaValida;
 import com.hackathon.flights.repository.AerolineaRepository;
 import com.hackathon.flights.repository.AeropuertoRepository;
 import com.hackathon.flights.repository.RutaValidaRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +22,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+@Tag(name = "Datos Maestros", description = "Endpoints para obtener listas de referencia")
 public class MasterDataController {
 
     @Autowired
@@ -31,6 +35,7 @@ public class MasterDataController {
     private RutaValidaRepository rutaValidaRepository;
 
     @GetMapping("/aerolineas")
+    @Operation(summary = "Obtener lista de aerolíneas soportadas")
     public List<String> obtenerAerolineas() {
         return aerolineaRepository.findAll()
                 .stream()
@@ -40,6 +45,7 @@ public class MasterDataController {
     }
 
     @GetMapping("/aeropuertos")
+    @Operation(summary = "Obtener lista de aeropuertos soportados")
     public List<String> obtenerAeropuertos() {
         return aeropuertoRepository.findAll()
                 .stream()
@@ -49,6 +55,8 @@ public class MasterDataController {
     }
 
     @GetMapping("/ruta/distancia")
+    @Operation(summary = "Obtener distancia real entre origen y destino")
+    @ApiResponse(responseCode = "200", description = "Distancia en millas (entero)")
     public ResponseEntity<Integer> obtenerDistancia(
             @RequestParam String aerolinea,
             @RequestParam String origen,

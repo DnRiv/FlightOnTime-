@@ -29,22 +29,22 @@
               </select>
             </div>
             <div>
-              <label for="distancia">Distancia (millas)</label>
-              <input id="distancia" name="distancia" type="number" min="1" step="1" required />
-            </div>
-          </div>
-          <div class="row">
-            <div>
               <label for="origen">Origen (Código IATA, ej: LGA)</label>
               <select id="origen" name="origen" required>
                 <option value="">Seleccione un aeropuerto</option>
               </select>
             </div>
+          </div>
+          <div class="row">
             <div>
               <label for="destino">Destino (Código IATA, ej: TPA)</label>
               <select id="destino" name="destino" required>
                 <option value="">Seleccione un aeropuerto</option>
               </select>
+            </div>
+            <div>
+              <label for="distancia">Distancia (millas)</label>
+              <input id="distancia" name="distancia" type="number" min="1" step="1" required readonly value="1" />
             </div>
           </div>
           <label for="fechaPartida">Fecha y hora de partida</label>

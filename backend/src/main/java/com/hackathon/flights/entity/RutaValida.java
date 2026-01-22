@@ -19,6 +19,9 @@ public class RutaValida {
     @Column(name = "destino", nullable = false, length = 3)
     private String destino;
 
+    @Column(name = "distancia", nullable = false)
+    private Integer distancia;
+
     // Constructor vacío
     public RutaValida() {}
 
@@ -43,5 +46,25 @@ public class RutaValida {
 
     public String getDestino() {
         return destino;
+    }
+
+    public Integer getDistancia() {
+        return distancia;
+    }
+
+    public void setAerolinea(String aerolinea) {
+        this.aerolinea = aerolinea != null ? aerolinea.trim().toUpperCase() : null;
+    }
+
+    public void setOrigen(String origen) {
+        this.origen = origen != null ? origen.trim().toUpperCase() : null;
+    }
+
+    public void setDestino(String destino) {
+        this.destino = destino != null ? destino.trim().toUpperCase() : null;
+    }
+
+    public void setDistancia(Integer distancia) {
+        this.distancia = distancia;
     }
 }

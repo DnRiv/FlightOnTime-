@@ -1,33 +1,238 @@
-# flight-on-time-alura-one-g8-equipo-62
-MVP para predecir los atrasos de vuelos (Hackathon)
+# 🎤 Presentación: Flight on Time – Equipo 62
+
+## 🛫 1. Introducción: El problema
+> Nuestro proyecto **Flight on Time** predice si un vuelo de pasajeros saldrá **puntual o retrasado** y entrega la **probabilidad exacta** de ese resultado.  
+> Esta es nuestra solución al desafío propuesto.
+
+## 🧠 2. Tecnología y modelo de Machine Learning
+> Para lograrlo, entrenamos un modelo de **Machine Learning supervisado**, usando datos históricos de vuelos reales.  
+> El modelo fue optimizado, serializado en formato **Joblib**, y expuesto como un microservicio mediante **FastAPI y Uvicorn** en Python.
+> ✈️ [![Video: FlightOnTime - Machine Learning]](https://youtu.be/au79l6lFcP8?si=ziqiQfNHxRuS6ml0&t=27)
+
+## ⚙️ 3. Arquitectura del sistema
+> La arquitectura es modular y robusta.  
+> El backend principal está construido en **Java con Spring Boot**, y actúa como orquestador del flujo completo.
+
+## 🔐 4. Validación inteligente con base de datos
+> Primero, valida todos los datos de entrada: aerolínea, origen, destino, fecha, hora y distancia.  
+> Y aquí tomamos una decisión clave:  
+> **en lugar de usar archivos CSV, validamos todo desde una base de datos MySQL**.  
+> Esto nos da **integridad de datos**, soporte para múltiples usuarios simultáneos y respuestas más rápidas.
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=hP6y7bgoPfo7mUUE&t=57)
+
+## 🌍 5. Manejo de zonas horarias
+> Una vez validado, el sistema convierte la hora local a la **zona horaria del aeropuerto de origen**, usando **ZonedDateTime de Java**.  
+> Luego, realiza una llamada HTTP al microservicio de Python, que ejecuta el modelo y devuelve la predicción.
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=_OS1DIZHIEFt1_3V&t=85)
+
+## 🛠️ 6. Tecnologías utilizadas
+> - **FastAPI en Python 3.12**: para el modelo de Machine Learning  
+> - **Java 17.0 y Spring Boot 3.3.6**: para el backend principal  
+> - **MySQL 8.0 y Workbench 8.0**: para administrar las tablas de aerolíneas, aeropuertos, zonas horarias y rutas válidas  
+> - **HTML5, CSS3 y JavaScript ES2024**: para la interfaz web  
+> - Toda la infraestructura fue desplegada en una máquina virtual de **Oracle Cloud**
+
+## 🌐 7. Demostración en vivo
+> Ahora, les mostramos el sistema en acción, a través de su dirección pública:  
+> **161.153.195.108**
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=-LRXpRRWmm-Oqbvs&t=132)
+
+```mermaid
+graph LR
+A[Cliente Web] --> B(Spring Boot)
+B --> C{Validación BD}
+C -->|OK| D[FastAPI/DS]
+C -->|Error| E[Respuesta 400]
+D --> F[Guardar en vuelos]
+F --> G[Respuesta 200]
+```
+
+> Gracias a que todo se basa en base de datos, los campos de aerolínea, origen y destino son **menús desplegables**.  
+> Esto evita errores de escritura, mejora la experiencia del usuario… y elimina validaciones innecesarias.
+
+> Detrás de escena, todas estas validaciones se ejecutan en tiempo real, consultando cuatro tablas:  
+> - **aerolineas**  
+> - **aeropuertos**  
+> - **aeropuertos_zonas**  
+> - **rutas_validas**
+> La tabla **vuelos**, inicialmente vacía, solo acepta datos validados.
+> En la página principal, seleccionamos:  
+> - Aerolínea  
+> - Aeropuerto de origen  
+> - Aeropuerto de destino  
+> - Fecha y hora de salida  
+
+> Y observen: **la distancia se rellena automáticamente**.  
+> El sistema consulta la tabla `rutas_validas` y obtiene la distancia real entre esos dos puntos.
+
+> Si omitimos algún campo, el sistema responde al instante:  
+> **“Todos los campos son obligatorios”**.
+
+> Al presionar **“Predecir”**, el sistema valida, consulta el modelo de Machine Learning…  
+> y devuelve, por ejemplo:  
+> **“Retrasado, con una confianza del 71 por ciento”**.
+
+> Si revisamos la tabla `vuelos`, confirmamos que el registro se guardó correctamente.
+
+> Si ingresamos una fecha anterior a la actual,  
+> el sistema no compara contra la hora local del usuario…  
+> sino contra la **zona horaria del aeropuerto de origen**.  
+> Y responde:  
+> **“La fecha de partida debe ser futura en [código]”**.
+
+> Y si la ruta no existe en nuestra base de datos,  
+> muestra claramente:  
+> **“Ruta no soportada”**.
+
+> En una prueba adicional, ingresamos una hora que parece pasada según la hora local de Chile.  
+> Pero el sistema reconoce que el aeropuerto de origen es **Denver**…  
+> convierte la hora a su zona horaria…  
+> y valida contra UTC.  
+> Esto garantiza **coherencia global**, sin importar desde dónde se acceda.
+
+## 📥 8. Procesamiento por lotes**
+> Finalmente, implementamos una funcionalidad avanzada: **procesamiento por lotes**.  
+> Subimos un archivo CSV con múltiples vuelos…  
+> y el sistema devuelve un informe detallado:  
+> - Qué registros fueron exitosos  
+> - Cuáles fallaron  
+> - Y el motivo exacto de cada error
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=ht4zapMLoWqZvw3-&t=327)
+
+## 🧪 **9. Pruebas automatizadas**
+> Como parte de nuestra calidad, realizamos:  
+> - **Pruebas unitarias con Mockito**: no dependen de archivos ni base de datos, usan mocks y cubren todos los casos de validación.  
+> - **Pruebas de integración con H2**: comprueban que los repositorios funcionan correctamente con JPA.
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=VTWIlsynm8awhIVb&t=369)
+
+## 🛠️ 10. Instalación del entorno virtual (Linux)
+
+1. **Directorio raíz:**
+```plaintext
+.
+├── backend
+├── data_science
+```
+
+2. **Ir al directorio backend**
+
+    ```bash
+    cd ~/data_science
+    ```
+   
+3. **Crear el entorno virtual:**
+
+```bash
+sudo apt install python3.12-venv # Instalar python3
+python3 -m venv .venv  # Crear nuevo entorno virtual
+```
+    
+3. **Actívarlo:**
+
+```bash
+source .venv/bin/activate
+```
+
+	Para desactivarlo escribir:
+
+```bash
+deactivate
+```
+
+4. **Instalar las librerías necesarias:
+   
+```bash
+pip install fastapi uvicorn scikit-learn pandas joblib numpy
+```
+
+5. **Prueba rápida de encendido:**
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+- Si ve "Application startup complete", (Sistema virtual funcionando)
+    
+- Presiona **`Ctrl + C`** para apagarlo y volver a la terminal.
+
+## 🖥️ **11. Configuración y ejecución del backend en IntelliJ IDEA (Spring Boot)**
+
+El backend del proyecto **FlightOnTime** está desarrollado en **Java con Spring Boot** y se comunica con una base de datos **MySQL**. A continuación, se describe cómo configurarlo y ejecutarlo localmente en su PC.
+
+### 1. Clonar o copiar el proyecto en tu PC
+- Asegúrate de tener el directorio `backend` en una carpeta local, por ejemplo:
+  ```
+  ~/proyectos/FlightOnTime/backend
+  ```
+
+### **2. Abrir el proyecto en IntelliJ IDEA**
+1. Abre **IntelliJ IDEA**.
+2. Selecciona **“Open”** o **“Open Project”**.
+3. Navega hasta la carpeta `backend` (la que contiene el archivo `pom.xml`).
+4. Haz clic en **OK**. IntelliJ reconocerá automáticamente el proyecto como un proyecto Maven.
+
+> Si es la primera vez que lo abres, IntelliJ descargará las dependencias automáticamente.
+
+### **3. Configurar y activar MySQL localmente**
+El backend requiere una base de datos MySQL en ejecución.
+
+1. Asegúrate de tener **MySQL Server** instalado y en ejecución:
+   ```bash
+   sudo systemctl start mysql
+   sudo systemctl status mysql  # Verifica que esté activo
+   ```
+2. Crea la base de datos y los usuarios necesarios (si aún no existen):
+   ```sql
+   CREATE DATABASE flighton;
+   CREATE USER 'flights_user'@'localhost' IDENTIFIED BY 'tu_contraseña_segura';
+   GRANT ALL PRIVILEGES ON flightontime.* TO 'flights_user'@'localhost';
+   FLUSH PRIVILEGES;
+   ```
+
+3. Verifica que los datos de conexión a la Base de Datos coincidan con el archivo:
+
+> **Importante:** flights_user y tu_contraseña_segura en en el Punto 2 y 3 deben ser la misma
+
+```
+backend/src/main/resources/application.properties
+```
+
+   Ejemplo esperado:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/flighton?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+spring.datasource.username=flights_user
+spring.datasource.password=tu_contraseña_segura
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+```
+
+> **Importante:** Los archivos .sql, para crear las tablas se encuentran en la carpeta:
+
+```
+backend/sql
+```
+
+### **4. Ejecutar la aplicación Spring Boot**
+
+1. En IntelliJ, navega a:
+   ```
+   src/main/java/com.hackathon/FlightApplication.java
+   ```
 
 
-## Commit Convention
+2. Haz clic derecho sobre el archivo y selecciona **“Run ‘FlightApplication’”**.
 
-This project follows a simple and clear commit message convention.
+3. Espera a que la consola muestre:
+   ```
+   Tomcat started on port(s): 8080 (http)
+   Started FlightApplication in X.XXX seconds
+   ```
 
-### Format
-```<type>: <short description>```
+#### **5. Verificar que la API esté funcionando**
 
-### Allowed Types (no more, no less)
+Abre tu navegador y visita:
 
-| Type  | Usage                          |
-|-------|--------------------------------|
-| feat  | New functionality              |
-| fix   | Bug fix                        |
-| docs  | Documentation changes          |
-| chore | Project setup, config, cleanup |
-| model | Data Science model changes     |
-| test  | Tests                          |
+```
+http://localhost:8080
+```
 
-### Examples
-chore: init project structure
-docs: add integration contract
-feat: add predict endpoint
-model: train baseline model
-fix: validate input fields
-test: add predict endpoint tests
 
-- 📋 Project management:
-**Trello Board:**
-  https://trello.com/b/GAmLaRHh/proyecto-3-flightontime-%E2%9C%88%EF%B8%8F-prediccion-de-retrasos-de-vuelos

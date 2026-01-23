@@ -115,7 +115,7 @@ F --> G[Respuesta 200]
 ├── data_science
 ```
 
-2. **Ir al directorio backend**
+2. **Ir al directorio data_science**
 
     ```bash
     cd ~/data_science
@@ -241,4 +241,6 @@ http://localhost:8080
 > [API - Interfaz interactiva](http://161.153.195.108/swagger-ui.html)
 > 
 > [API - Especificaciones: ](http://161.153.195.108/v3/api-docs)
+> 
+> [Estructura general de la API](https://github.com/DnRiv/FlightOnTime-/blob/main/docs/FlightOnTime_API.pdf)
 

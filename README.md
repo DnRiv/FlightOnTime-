@@ -90,13 +90,14 @@ F --> G[Respuesta 200]
 > y valida contra UTC.  
 > Esto garantiza **coherencia global**, sin importar desde dónde se acceda.
 
-## 📥 8. Procesamiento por lotes**
+## 📥 8. Procesamiento por lotes
 > Finalmente, implementamos una funcionalidad avanzada: **procesamiento por lotes**.  
 > Subimos un archivo CSV con múltiples vuelos…  
 > y el sistema devuelve un informe detallado:  
 > - Qué registros fueron exitosos  
 > - Cuáles fallaron  
 > - Y el motivo exacto de cada error
+> - Para realizar una prueba, puede utilizar el archivo: ~/docs/lote.csv
 > ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=ht4zapMLoWqZvw3-&t=327)
 
 ## 🧪 **9. Pruebas automatizadas**
@@ -139,7 +140,7 @@ source .venv/bin/activate
 deactivate
 ```
 
-4. **Instalar las librerías necesarias:
+4. **Instalar las librerías necesarias:**
    
 ```bash
 pip install fastapi uvicorn scikit-learn pandas joblib numpy
@@ -227,7 +228,7 @@ backend/sql
    Started FlightApplication in X.XXX seconds
    ```
 
-#### **5. Verificar que la API esté funcionando**
+### **5. Verificar que la API esté funcionando**
 
 Abre tu navegador y visita:
 
@@ -235,4 +236,9 @@ Abre tu navegador y visita:
 http://localhost:8080
 ```
 
+## 🧪 12. Documentación API
+
+> [API - Interfaz interactiva](http://161.153.195.108/swagger-ui.html)
+> 
+> [API - Especificaciones: ](http://161.153.195.108/v3/api-docs)
 

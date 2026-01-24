@@ -27,35 +27,25 @@ document.addEventListener('DOMContentLoaded', function () {
         distanciaInput.value = "1";
     }
 
-    function llenarSelect(selectElement, valores) {
-        selectElement.innerHTML = '<option value="">Seleccione...</option>';
+    function llenarDatalist(datalistId, valores) {
+        const datalist = document.getElementById(datalistId);
+        datalist.innerHTML = ''; // limpiar
         valores.forEach(valor => {
             const option = document.createElement('option');
             option.value = valor;
-            option.textContent = valor;
-            selectElement.appendChild(option);
+            datalist.appendChild(option);
         });
     }
 
     // Cargar aerolíneas
     fetch('/api/aerolineas')
-        .then(response => response.json())
-        .then(data => {
-            data.sort();
-            llenarSelect(aerolineaSelect, data);
-        })
-        .catch(err => console.warn('No se pudieron cargar aerolíneas:', err));
+      .then(r => r.json())
+      .then(data => llenarDatalist('aerolineas-list', data.sort()));
 
     // Cargar aeropuertos
     fetch('/api/aeropuertos')
-        .then(response => response.json())
-        .then(data => {
-            data.sort();
-            const aeropuertos = data;
-            llenarSelect(origenSelect, aeropuertos);
-            llenarSelect(destinoSelect, aeropuertos);
-        })
-        .catch(err => console.warn('No se pudieron cargar aeropuertos:', err));
+      .then(r => r.json())
+      .then(data => llenarDatalist('aeropuertos-list', data.sort()));
 
     // Función para cargar distancia
     function cargarDistancia() {

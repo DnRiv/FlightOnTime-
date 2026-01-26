@@ -14,6 +14,13 @@ const qs = (sel, root = document) => root.querySelector(sel);
 const show = (el, on = true) => { if (el) el.style.display = on ? "" : "none"; };
 const pretty = (obj) => (typeof obj === "string" ? obj : JSON.stringify(obj, null, 2));
 
+// NUEVA FUNCIÓN: Extrae el código (lo que está antes del guion)
+// Ejemplo: De "AA - American Airlines" extrae "AA"
+const getCodigo = (valor) => {
+    if (!valor) return "";
+    return valor.split(" - ")[0].trim().toUpperCase();
+};
+
 // ===== CARGA INICIAL DE DATOS MAESTROS =====
 document.addEventListener('DOMContentLoaded', function () {
     const aerolineaSelect = qs("#aerolinea");
@@ -27,31 +34,51 @@ document.addEventListener('DOMContentLoaded', function () {
         distanciaInput.value = "1";
     }
 
-    function llenarDatalist(datalistId, valores) {
-        const datalist = document.getElementById(datalistId);
-        datalist.innerHTML = ''; // limpiar
-        valores.forEach(valor => {
-            const option = document.createElement('option');
-            option.value = valor;
-            datalist.appendChild(option);
-        });
+    function llenarDatalist(datalistId, items) {
+      const datalist = document.getElementById(datalistId);
+
+      // DIAGNÓSTICO: Si no existe el datalist, avisamos y no hacemos nada
+      if (!datalist) {
+          console.error(`❌ Error Crítico: No encuentro el elemento <datalist id="${datalistId}"> en el HTML.`);
+          return;
+      }
+
+      datalist.innerHTML = '';
+      items.forEach(item => {
+        const option = document.createElement('option');
+        // Usamos el texto completo en el value
+        option.value = item.texto;
+        datalist.appendChild(option);
+      });
     }
 
     // Cargar aerolíneas
     fetch('/api/aerolineas')
       .then(r => r.json())
-      .then(data => llenarDatalist('aerolineas-list', data.sort()));
+      .then(data => {
+        const aerolineas = data.map(a => ({
+          codigo: a.codigo,
+          texto: `${a.codigo} - ${a.nombre}`
+        }));
+        llenarDatalist('aerolineas-list', aerolineas);
+      });
 
     // Cargar aeropuertos
     fetch('/api/aeropuertos')
       .then(r => r.json())
-      .then(data => llenarDatalist('aeropuertos-list', data.sort()));
+      .then(data => {
+        const aeropuertos = data.map(a => ({
+          codigo: a.codigo,
+          texto: `${a.codigo} - ${a.nombre}`
+        }));
+        llenarDatalist('aeropuertos-list', aeropuertos);
+      });
 
     // Función para cargar distancia
     function cargarDistancia() {
-        const aerolinea = aerolineaSelect.value;
-        const origen = origenSelect.value;
-        const destino = destinoSelect.value;
+        const aerolinea = getCodigo(aerolineaSelect.value);
+        const origen = getCodigo(origenSelect.value);
+        const destino = getCodigo(destinoSelect.value);
 
         if (aerolinea && origen && destino) {
             fetch(`/api/ruta/distancia?aerolinea=${aerolinea}&origen=${origen}&destino=${destino}`)
@@ -78,6 +105,7 @@ function setupTabs() {
     const tabLote = qs("#tab-lote");
     const panelIndividual = qs("#panel-individual");
     const panelLote = qs("#panel-lote");
+
     if (!tabIndividual || !tabLote || !panelIndividual || !panelLote) return;
 
     function setTab(tab) {
@@ -90,6 +118,7 @@ function setupTabs() {
     }
     tabIndividual.addEventListener("click", () => setTab("individual"));
     tabLote.addEventListener("click", () => setTab("lote"));
+
     window.addEventListener("hashchange", () => {
         const h = location.hash.replace("#", "");
         setTab(h === "lote" ? "lote" : "individual");
@@ -120,9 +149,16 @@ function setupIndividual() {
         if (state) { show(out, false); show(state, true); state.textContent = "Procesando predicción…"; }
         else if (out) { show(out, true); out.textContent = "Procesando predicción…"; }
 
-        const aerolinea = (qs("#aerolinea")?.value || "").trim().toUpperCase();
-        const origen    = (qs("#origen")?.value || "").trim().toUpperCase();
-        const destino   = (qs("#destino")?.value || "").trim().toUpperCase();
+        // Limpiamos los valores antes de enviar
+        const aerolineaRaw = qs("#aerolinea")?.value || "";
+        const aerolinea = getCodigo(aerolineaRaw);
+
+        const origenRaw = qs("#origen")?.value || "";
+        const origen = getCodigo(origenRaw);
+
+        const destinoRaw = qs("#destino")?.value || "";
+        const destino = getCodigo(destinoRaw);
+
         const fechaPartida = qs("#fechaPartida")?.value || "";
         const distancia = Number(qs("#distancia")?.value || 0);
 
@@ -168,8 +204,7 @@ function setupIndividual() {
             }
 
             const data = await res.json();
-
-            // ✅ Ajuste de probabilidad → confianza en la predicción
+            // Ajuste de probabilidad
             let probabilidadMostrar;
             if (data.prevision === "Puntual") {
                 probabilidadMostrar = 1 - (data.probabilidad || 0);
@@ -184,12 +219,17 @@ function setupIndividual() {
                 </span></p>
                 <p><strong>Confianza:</strong> ${(probabilidadMostrar * 100).toFixed(1)}%</p>
             `;
-
         } catch (err) {
             if (state) { show(state, false); }
-            if (out) { show(out, true); out.textContent = "Error al consultar el backend: " + (err?.message || err); }
+            if (out) {
+                show(out, true);
+                out.textContent = "Error al consultar el backend: " + (err?.message || err);
+            }
         } finally {
-            if (btn) { btn.disabled = false; btn.textContent = btn.dataset.prevText || "🔍 Predecir"; }
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = btn.dataset.prevText || "🔍 Predecir";
+            }
         }
     });
 }
@@ -286,7 +326,8 @@ function setupBatch() {
                     const rows = respuestas.map(r => {
                         const statusClass = r.estado === "OK" ? "status-ok" : "status-err";
                         const statusText = r.estado === "OK" ? "✅ OK" : `⚠️ ${r.estado}`;
-                        // ✅ Ajuste de probabilidad en lote también
+
+                        // Ajuste de probabilidad
                         let resultadoTexto = r.mensajeError || "Error no especificado";
                         if (r.estado === "OK") {
                             let probAjustada = r.prevision === "Puntual" ? (1 - r.probabilidad) : r.probabilidad;

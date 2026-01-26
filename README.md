@@ -7,7 +7,7 @@
 ## 🧠 2. Tecnología y modelo de Machine Learning
 > Para lograrlo, entrenamos un modelo de **Machine Learning supervisado**, usando datos históricos de vuelos reales.  
 > El modelo fue optimizado, serializado en formato **Joblib**, y expuesto como un microservicio mediante **FastAPI y Uvicorn** en Python.
-> ✈️ [![Video: FlightOnTime - Machine Learning]](https://youtu.be/au79l6lFcP8?si=ziqiQfNHxRuS6ml0&t=27)
+> ✈️ [![Video: FlightOnTime - Machine Learning]](https://youtu.be/hjA9zRGsb4A?si=cpP2I418jpzv9w2Q&t=27)
 
 ## ⚙️ 3. Arquitectura del sistema
 > La arquitectura es modular y robusta.  
@@ -18,12 +18,12 @@
 > Y aquí tomamos una decisión clave:  
 > **en lugar de usar archivos CSV, validamos todo desde una base de datos MySQL**.  
 > Esto nos da **integridad de datos**, soporte para múltiples usuarios simultáneos y respuestas más rápidas.
-> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=hP6y7bgoPfo7mUUE&t=57)
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/hjA9zRGsb4A?si=OJ53i-gc0EOdYc38&t=57)
 
 ## 🌍 5. Manejo de zonas horarias
 > Una vez validado, el sistema convierte la hora local a la **zona horaria del aeropuerto de origen**, usando **ZonedDateTime de Java**.  
 > Luego, realiza una llamada HTTP al microservicio de Python, que ejecuta el modelo y devuelve la predicción.
-> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=_OS1DIZHIEFt1_3V&t=85)
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/hjA9zRGsb4A?si=JP2jHuUGjsZ2uhyf&t=85)
 
 ## 🛠️ 6. Tecnologías utilizadas
 > - **FastAPI en Python 3.12**: para el modelo de Machine Learning  
@@ -35,7 +35,7 @@
 ## 🌐 7. Demostración en vivo
 > Ahora, les mostramos el sistema en acción, a través de su dirección pública:  
 > **161.153.195.108**
-> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=-LRXpRRWmm-Oqbvs&t=132)
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/hjA9zRGsb4A?si=n7SAdNNj9y1Dtc4I&t=132)
 
 ```mermaid
 graph LR
@@ -98,13 +98,13 @@ F --> G[Respuesta 200]
 > - Cuáles fallaron  
 > - Y el motivo exacto de cada error
 > - Para realizar una prueba, puede utilizar el archivo: ~/docs/lote.csv
-> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=ht4zapMLoWqZvw3-&t=327)
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/hjA9zRGsb4A?si=jQOvoVeIfdt5O0pU&t=326)
 
 ## 🧪 **9. Pruebas automatizadas**
 > Como parte de nuestra calidad, realizamos:  
 > - **Pruebas unitarias con Mockito**: no dependen de archivos ni base de datos, usan mocks y cubren todos los casos de validación.  
 > - **Pruebas de integración con H2**: comprueban que los repositorios funcionan correctamente con JPA.
-> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/au79l6lFcP8?si=VTWIlsynm8awhIVb&t=369)
+> ✈️ [![Video: FlightOnTime - Validación]](https://youtu.be/hjA9zRGsb4A?si=pscvWfAqAtcg0MoP&t=364)
 
 ## 🛠️ 10. Instalación del entorno virtual (Linux)
 
@@ -161,28 +161,28 @@ uvicorn main:app --host 0.0.0.0 --port 8000
 El backend del proyecto **FlightOnTime** está desarrollado en **Java con Spring Boot** y se comunica con una base de datos **MySQL**. A continuación, se describe cómo configurarlo y ejecutarlo localmente en su PC.
 
 ### 1. Clonar o copiar el proyecto en tu PC
-- Asegúrate de tener el directorio `backend` en una carpeta local, por ejemplo:
+- Asegúre de tener el directorio `backend` en una carpeta local, por ejemplo:
   ```
   ~/proyectos/FlightOnTime/backend
   ```
 
 ### **2. Abrir el proyecto en IntelliJ IDEA**
-1. Abre **IntelliJ IDEA**.
-2. Selecciona **“Open”** o **“Open Project”**.
-3. Navega hasta la carpeta `backend` (la que contiene el archivo `pom.xml`).
-4. Haz clic en **OK**. IntelliJ reconocerá automáticamente el proyecto como un proyecto Maven.
+1. Abra **IntelliJ IDEA**.
+2. Seleccione **“Open”** o **“Open Project”**.
+3. Navegar hasta la carpeta `backend` (la que contiene el archivo `pom.xml`).
+4. Haga clic en **OK**. IntelliJ reconocerá automáticamente el proyecto como un proyecto Maven.
 
 > Si es la primera vez que lo abres, IntelliJ descargará las dependencias automáticamente.
 
 ### **3. Configurar y activar MySQL localmente**
 El backend requiere una base de datos MySQL en ejecución.
 
-1. Asegúrate de tener **MySQL Server** instalado y en ejecución:
+1. Asegure de tener **MySQL Server** instalado y en ejecución:
    ```bash
    sudo systemctl start mysql
    sudo systemctl status mysql  # Verifica que esté activo
    ```
-2. Crea la base de datos y los usuarios necesarios (si aún no existen):
+2. Crear la base de datos y los usuarios necesarios (si aún no existen):
    ```sql
    CREATE DATABASE flighton;
    CREATE USER 'flights_user'@'localhost' IDENTIFIED BY 'tu_contraseña_segura';
@@ -190,7 +190,7 @@ El backend requiere una base de datos MySQL en ejecución.
    FLUSH PRIVILEGES;
    ```
 
-3. Verifica que los datos de conexión a la Base de Datos coincidan con el archivo:
+3. Verifique que los datos de conexión a la Base de Datos coincidan con el archivo:
 
 > **Importante:** flights_user y tu_contraseña_segura en en el Punto 2 y 3 deben ser la misma
 
@@ -214,15 +214,15 @@ backend/sql
 
 ### **4. Ejecutar la aplicación Spring Boot**
 
-1. En IntelliJ, navega a:
+1. En IntelliJ, navegue a:
    ```
    src/main/java/com.hackathon/FlightApplication.java
    ```
 
 
-2. Haz clic derecho sobre el archivo y selecciona **“Run ‘FlightApplication’”**.
+2. Haga clic derecho sobre el archivo y seleccione **“Run ‘FlightApplication’”**.
 
-3. Espera a que la consola muestre:
+3. Espere a que la consola muestre:
    ```
    Tomcat started on port(s): 8080 (http)
    Started FlightApplication in X.XXX seconds
@@ -230,7 +230,7 @@ backend/sql
 
 ### **5. Verificar que la API esté funcionando**
 
-Abre tu navegador y visita:
+Abra su navegador y visite:
 
 ```
 http://localhost:8080
@@ -242,5 +242,12 @@ http://localhost:8080
 > 
 > [API - Especificaciones: ](http://161.153.195.108/v3/api-docs)
 > 
-> [Estructura general de la API](https://github.com/DnRiv/FlightOnTime-/blob/main/docs/FlightOnTime_API.pdf)
+> [API - Estructura General API: ](https://github.com/DnRiv/FlightOnTime-/blob/main/docs/FlightOnTime_API.pdf)
 
+## 🛠️ 13. Mejoras futuras por incorporar a la aplicación
+
+1. **Sistema de Suscripción:** Para que el usuario pueda recibir el estado del vuelo, de la consulta que realizó, momentos antes de viajar y tener un seguimiento real de su vuelo. 
+2. **Integración de Clima:** Incorporar, a la predicción, datos reales del estado del clima en el momento del vuelo.
+3. **Dashboard de Estadísticas:** Con una pestaña en el frontend que muestre gráficos, como por ejemplo, cuál es la aerolínea más puntual o impuntual, cuántos retrasos hubo en el día o datos históricos de aeropuertos y aerolíneas para contextualizar los retrasos.
+4. **Verificación del Estado del Vuelo:** Con las aerolíneas, que pueden retrasar un vuelo por causas diferentes al clima, y poder alertar a los usuarios, como por ejemplo, si hay un retraso de cuánto tiempo será.
+5. **Información en Tiempo Real de los Vuelos:** Para que el usuario pueda ver el estado del vuelo sin tener que ingresar datos a la aplicación, ya sea por no tener la tranquilidad suficiente o no tener el boleto al alcance de su mano, facilitándole información necesaria en tiempo real.

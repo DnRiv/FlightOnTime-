@@ -1,81 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>FlightOnTime — Predicción</title>
-  <link rel="icon" href="/favicon.png" type="image/png" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8" />
+    <title>FlightOnTime — Predicción</title>
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-  <div class="container">
+<div class="container">
     <div class="card" role="region" aria-labelledby="title">
-      <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px;">
-        <h1 id="title" style="margin: 0;">✈️ FlightOnTime</h1>
-        <a href="https://www.youtube.com/watch?v=Yfzwi8RFw3o" target="_blank" rel="noopener"
-           class="btn-secondary" style="font-size: 0.9em; padding: 6px 12px; text-decoration: none;">
-          📹 Manual de uso
-        </a>
-      </div>
-      <p class="subtitle">Predicción individual y por lote — Una sola interfaz, cero turbulencias.</p>
-
-      <nav class="tabs" role="tablist" aria-label="Modos de predicción">
-        <button class="tab-btn" id="tab-individual" role="tab" aria-controls="panel-individual" aria-selected="true">Predicción individual</button>
-        <button class="tab-btn" id="tab-lote" role="tab" aria-controls="panel-lote" aria-selected="false">Predicción en lote</button>
-      </nav>
-
-      <section id="panel-individual" class="panel active" role="tabpanel" aria-labelledby="tab-individual">
-        <div class="hint">Ingresa los datos del vuelo, para predecir si será <strong>puntual</strong> o <strong>retrasado</strong>.</div>
-        <form id="form-individual" novalidate>
-          <div class="row">
-            <div>
-              <label for="aerolinea">Aerolínea (Código IATA, ej: DL)</label>
-              <input type="text" id="aerolinea" list="aerolineas-list" placeholder="Ej: AA, DL..." minlength="2" maxlength="2" required>
-              <datalist id="aerolineas-list"></datalist>
-            </div>
-            <div>
-              <label for="origen">Origen (Código IATA, ej: LGA)</label>
-              <input type="text" id="origen" list="aeropuertos-list" placeholder="Ej: JFK, LAX..." minlength="3" maxlength="3" required>
-              <datalist id="aeropuertos-list"></datalist>
-            </div>
-          </div>
-          <div class="row">
-            <div>
-              <label for="destino">Destino (Código IATA, ej: TPA)</label>
-              <input type="text" id="destino" list="aeropuertos-list" placeholder="Ej: MIA, SFO..." minlength="3" maxlength="3" required>
-            </div>
-            <div>
-              <label for="distancia">Distancia (millas)</label>
-              <input id="distancia" name="distancia" type="number" min="1" step="1" required readonly value="1" />
-            </div>
-          </div>
-          <label for="fechaPartida">Fecha y hora de partida</label>
-          <input id="fechaPartida" name="fechaPartida" type="datetime-local" required />
-          <button class="btn" id="btn-individual" type="submit">🔍 Predecir</button>
-        </form>
-        <div id="resultado-individual" class="result" style="display:none;"></div>
-        <div id="estado-individual" class="notice" style="display:none;"></div>
-      </section>
-
-      <section id="panel-lote" class="panel" role="tabpanel" aria-labelledby="tab-lote">
-        <div class="hint">
-          Sube un CSV con múltiples vuelos. Formato esperado:<br />
-          <code>aerolinea,origen,destino,fecha_partida,distancia</code><br />
-          Ejemplo: <code>AA,MIA,JFK,2026-06-15T10:30,1099</code>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px;">
+            <h1 id="title" style="margin: 0;">✈️ FlightOnTime</h1>
+            <a href="https://www.youtube.com/watch?v=Yfzwi8RFw3o" target="_blank" rel="noopener"
+               class="btn-secondary" style="font-size: 0.9em; padding: 6px 12px; text-decoration: none;">
+                📹 Manual de uso
+            </a>
         </div>
-        <div class="file-picker">
-          <label for="csvFile" class="btn-secondary file-label">📁 Seleccionar archivo CSV</label>
-          <input type="file" id="csvFile" accept=".csv" />
-          <div id="fileName">Ningún archivo seleccionado</div>
-        </div>
-        <button class="btn" id="btn-lote" disabled>📤 Cargar y predecir</button>
-        <div id="summary-lote" class="summary" style="display:none;"></div>
-        <div id="detalles-lote" style="display:none;"></div>
-        <div id="estado-lote" class="notice" style="display:none;"></div>
-      </section>
+        <p class="subtitle">Predicción individual y por lote — Una sola interfaz, cero turbulencias.</p>
+
+        <nav class="tabs" role="tablist" aria-label="Modos de predicción">
+            <button class="tab-btn" id="tab-individual" role="tab" aria-controls="panel-individual" aria-selected="true">Predicción individual</button>
+            <button class="tab-btn" id="tab-lote" role="tab" aria-controls="panel-lote" aria-selected="false">Predicción en lote</button>
+        </nav>
+
+        <section id="panel-individual" class="panel active" role="tabpanel" aria-labelledby="tab-individual">
+            <div class="hint">Ingresa los datos del vuelo, para predecir si será <strong>puntual</strong> o <strong>retrasado</strong>.</div>
+            <form id="form-individual" novalidate>
+                <div class="row">
+                    <div>
+                        <label for="aerolinea">Aerolínea (Código IATA, ej: DL)</label>
+                        <input type="text" id="aerolinea" list="aerolineas-list" placeholder="Ej: AA, DL..." minlength="2" maxlength="2" required>
+                        <datalist id="aerolineas-list"></datalist>
+                    </div>
+                    <div>
+                        <label for="origen">Origen (Código IATA, ej: LGA)</label>
+                        <input type="text" id="origen" list="aeropuertos-list" placeholder="Ej: JFK, LAX..." minlength="3" maxlength="3" required>
+                        <datalist id="aeropuertos-list"></datalist>
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label for="destino">Destino (Código IATA, ej: TPA)</label>
+                        <input type="text" id="destino" list="aeropuertos-list" placeholder="Ej: MIA, SFO..." minlength="3" maxlength="3" required>
+                    </div>
+                    <div>
+                        <label for="distancia">Distancia (millas)</label>
+                        <input id="distancia" name="distancia" type="number" min="1" step="1" required readonly value="1" />
+                    </div>
+                </div>
+                <label for="fechaPartida">Fecha y hora de partida</label>
+                <input id="fechaPartida" name="fechaPartida" type="datetime-local" required />
+                <button class="btn" id="btn-individual" type="submit">🔍 Predecir</button>
+            </form>
+            <div id="resultado-individual" class="result" style="display:none;"></div>
+            <div id="estado-individual" class="notice" style="display:none;"></div>
+        </section>
+
+        <section id="panel-lote" class="panel" role="tabpanel" aria-labelledby="tab-lote">
+            <div class="hint">
+                Sube un CSV con múltiples vuelos. Formato esperado:<br />
+                <code>aerolinea,origen,destino,fecha_partida,distancia</code><br />
+                Ejemplo: <code>AA,MIA,JFK,2026-06-15T10:30,1099</code>
+            </div>
+            <div class="file-picker">
+                <label for="csvFile" class="btn-secondary file-label">📁 Seleccionar archivo CSV</label>
+                <input type="file" id="csvFile" accept=".csv" />
+                <div id="fileName">Ningún archivo seleccionado</div>
+            </div>
+            <button class="btn" id="btn-lote" disabled>📤 Cargar y predecir</button>
+            <div id="summary-lote" class="summary" style="display:none;"></div>
+            <div id="detalles-lote" style="display:none;"></div>
+            <div id="estado-lote" class="notice" style="display:none;"></div>
+        </section>
     </div>
-  </div>
+</div>
 
-  <script src="/js/main.js" defer></script>
+<script src="/js/main.js" defer></script>
 </body>
 </html>
+
+

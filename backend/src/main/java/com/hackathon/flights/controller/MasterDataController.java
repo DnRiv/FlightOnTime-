@@ -11,12 +11,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -35,22 +33,24 @@ public class MasterDataController {
     private RutaValidaRepository rutaValidaRepository;
 
     @GetMapping("/aerolineas")
-    @Operation(summary = "Obtener lista de aerolíneas soportadas")
-    public List<String> obtenerAerolineas() {
-        return aerolineaRepository.findAll()
-                .stream()
-                .map(Aerolinea::getCodigo)
-                .sorted()
+    @Operation(summary = "Obtener lista de aerolíneas soportadas con nombre")
+    public List<Map<String, String>> obtenerAerolineas() {
+        return aerolineaRepository.findAll().stream()
+                .map(a -> Map.of(
+                        "codigo", a.getCodigo(),
+                        "nombre", a.getNombre() != null ? a.getNombre() : a.getCodigo()
+                ))
                 .collect(Collectors.toList());
     }
 
     @GetMapping("/aeropuertos")
-    @Operation(summary = "Obtener lista de aeropuertos soportados")
-    public List<String> obtenerAeropuertos() {
-        return aeropuertoRepository.findAll()
-                .stream()
-                .map(Aeropuerto::getCodigoIata)
-                .sorted()
+    @Operation(summary = "Obtener lista de aeropuertos soportados con nombre")
+    public List<Map<String, String>> obtenerAeropuertos() {
+        return aeropuertoRepository.findAll().stream()
+                .map(a -> Map.of(
+                        "codigo", a.getCodigoIata(),
+                        "nombre", a.getNombre() != null ? a.getNombre() : a.getCodigoIata()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -61,10 +61,8 @@ public class MasterDataController {
             @RequestParam String aerolinea,
             @RequestParam String origen,
             @RequestParam String destino) {
-
         Optional<RutaValida> ruta = rutaValidaRepository
                 .findByAerolineaAndOrigenAndDestino(aerolinea, origen, destino);
-
         if (ruta.isPresent()) {
             return ResponseEntity.ok(ruta.get().getDistancia());
         } else {
@@ -72,4 +70,3 @@ public class MasterDataController {
         }
     }
 }
-

@@ -1,8 +1,10 @@
 # 🎤 Presentación: Flight on Time – Equipo 62
 
-## 🛫 1. Introducción: El problema
-> Nuestro proyecto **Flight on Time** predice si un vuelo de pasajeros saldrá **puntual o retrasado** y entrega la **probabilidad exacta** de ese resultado.  
-> Esta es nuestra solución al desafío propuesto.
+## 🛫 1. Introducción: El problema y solución
+> Todos los que viajan en avión —y especialmente las aerolíneas y aeropuertos— sufren con retrasos. Estos retrasos causan insatisfacción en los pasajeros, costos extras para las empresas y problemas de logística (como conexiones perdidas y reajustes de vuelos).
+> El cliente quiere predecir, basándose en datos del vuelo (origen, destino, hora, aerolínea, etc.), cuál es la probabilidad de que el vuelo se retrase para prepararse con antelación
+> 
+> Una alternativa viable es que nuestro proyecto **Flight On Time** pronostique si un vuelo de pasajeros saldrá **puntual o retrasado** y entrega la **probabilidad exacta** de ese resultado. Esta es nuestra solución al desafío propuesto.
 
 ## 🧠 2. Tecnología y modelo de Machine Learning
 > Para lograrlo, entrenamos un modelo de **Machine Learning supervisado**, usando datos históricos de vuelos reales.  
